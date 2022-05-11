@@ -1,0 +1,35 @@
+package org.acme.model;
+
+import lombok.Data;
+import org.hibernate.annotations.*;
+
+import java.util.UUID;
+
+import javax.persistence.*;
+import javax.persistence.Entity;
+
+@Entity
+@Data
+public class Server {
+    @Id
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(
+            name = "UUID",
+            strategy = "org.hibernate.id.UUIDGenerator"
+    )
+    @ColumnDefault("random_uuid()")
+    @Column(name = "id")
+    private UUID id;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "cores")
+    private Integer cores;
+
+    @Column(name = "ram")
+    private Integer ram;
+
+    @Column(name = "storage")
+    private Integer storage;
+}

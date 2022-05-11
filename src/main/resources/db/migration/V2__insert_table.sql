@@ -1,0 +1,1 @@
+INSERT INTO server(id, name, cores, ram, storage) VALUES ('a848a45e-d065-11ec-a62f-2d718d2fcfae','server2', 4, 34, 33);
