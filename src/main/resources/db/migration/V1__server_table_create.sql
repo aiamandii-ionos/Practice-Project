@@ -1,3 +1,4 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE server (
     id UUID NOT NULL PRIMARY KEY DEFAULT uuid_generate_v1(),
     name VARCHAR(100),
