@@ -10,6 +10,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.Response;
 
 @ApplicationScoped
 public class ServerService {
@@ -22,9 +23,9 @@ public class ServerService {
 
     public Server findById(UUID uuid){
         Optional<Server> server = repository.findByIdOptional(uuid);
-        if(server.isPresent())
-            return server.get();
-        else throw new NotFoundException();
+        if(server.isEmpty())
+            throw new NotFoundException();
+        return server.get();
 
     }
 
@@ -32,5 +33,28 @@ public class ServerService {
     public Server save(Server server) {
         repository.persist(server);
         return server;
+    }
+
+    @Transactional
+    public Server update(UUID uuid, Server server){
+        Optional<Server> optionalServer = repository.findByIdOptional(uuid);
+        if(optionalServer.isEmpty())
+            throw new NotFoundException();
+        Server serverToUpdate = optionalServer.get();
+        serverToUpdate.setName(server.getName());
+        serverToUpdate.setCores(server.getCores());
+        serverToUpdate.setRam(server.getRam());
+        serverToUpdate.setStorage(server.getStorage());
+        repository.persist(serverToUpdate);
+        return serverToUpdate;
+    }
+
+    @Transactional
+    public Response delete(UUID uuid){
+        Optional<Server> server = repository.findByIdOptional(uuid);
+        if(server.isEmpty())
+            throw new NotFoundException();
+        repository.deleteById(uuid);
+        return Response.status(204).build();
     }
 }

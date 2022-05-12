@@ -26,8 +26,21 @@ public class ServerController {
     }
 
     @POST
-    public Response post(Server server) {
+    public Response createServer(Server server) {
         final Server saved = service.save(server);
         return Response.status(Response.Status.CREATED).entity(saved).build();
+    }
+
+    @PUT
+    @Path("/{serverId}")
+    public Response updateById(@PathParam("serverId") UUID serverId, Server server){
+        Server saved = service.update(serverId,server);
+        return Response.ok(saved).build();
+    }
+
+    @DELETE
+    @Path("/{serverId}")
+    public Response deleteById(@PathParam("serverId") UUID serverId){
+        return service.delete(serverId);
     }
 }
