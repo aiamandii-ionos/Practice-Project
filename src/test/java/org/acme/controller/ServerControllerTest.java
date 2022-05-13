@@ -69,7 +69,7 @@ class ServerControllerTest {
                 .storage(30)
                 .name("server1").build();
 
-        given()
+        Server saved = given()
                 .contentType(ContentType.JSON)
                 .body(server)
                 .when()
@@ -77,6 +77,7 @@ class ServerControllerTest {
                 .then()
                 .statusCode(201)
                 .extract().as(Server.class);
+        assertThat(saved.getId()).isNotNull();
     }
 
     @Test
