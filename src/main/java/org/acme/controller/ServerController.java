@@ -1,11 +1,14 @@
 package org.acme.controller;
 
+import org.acme.dto.ServerDto;
+import org.acme.mapper.ServerMapper;
 import org.acme.model.Server;
 import org.acme.service.ServerService;
 
-import java.util.UUID;
+import java.util.*;
 
 import javax.inject.Inject;
+import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
@@ -14,33 +17,39 @@ public class ServerController {
     @Inject
     private ServerService service;
 
+    @Inject
+    private ServerMapper mapper;
+
     @GET
     public Response get(){
-        return Response.ok(service.findAll()).build();
+        List<ServerDto> serverDtoList = service.findAll().stream().map(server -> mapper.toDTO(server)).toList();
+        return Response.ok(serverDtoList).build();
     }
 
     @GET
     @Path("/{serverId}")
     public Response getById(@PathParam("serverId") UUID serverId){
-        return Response.ok(service.findById(serverId)).build();
+        Server server = service.findById(serverId);
+        return Response.ok(mapper.toDTO(server)).build();
     }
 
     @POST
-    public Response createServer(Server server) {
-        final Server saved = service.save(server);
-        return Response.status(Response.Status.CREATED).entity(saved).build();
+    public Response createServer(@Valid ServerDto serverDto) {
+        final Server saved = service.save(mapper.toEntity(serverDto));
+        return Response.status(Response.Status.CREATED).entity(mapper.toDTO(saved)).build();
     }
 
     @PUT
     @Path("/{serverId}")
-    public Response updateById(@PathParam("serverId") UUID serverId, Server server){
-        Server saved = service.update(serverId,server);
-        return Response.ok(saved).build();
+    public Response updateById(@PathParam("serverId") UUID serverId, @Valid ServerDto serverDto){
+        Server saved = service.update(serverId,mapper.toEntity(serverDto));
+        return Response.ok(mapper.toDTO(saved)).build();
     }
 
     @DELETE
     @Path("/{serverId}")
     public Response deleteById(@PathParam("serverId") UUID serverId){
-        return service.delete(serverId);
+        service.delete(serverId);
+        return Response.status(204).build();
     }
 }

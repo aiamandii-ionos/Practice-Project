@@ -50,11 +50,10 @@ public class ServerService {
     }
 
     @Transactional
-    public Response delete(UUID uuid){
+    public void delete(UUID uuid){
         Optional<Server> server = repository.findByIdOptional(uuid);
         if(server.isEmpty())
             throw new NotFoundException();
         repository.deleteById(uuid);
-        return Response.status(204).build();
     }
 }
