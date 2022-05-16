@@ -21,14 +21,14 @@ public class ServerController {
     private ServerMapper mapper;
 
     @GET
-    public Response get(){
+    public Response get() {
         List<ServerDto> serverDtoList = service.findAll().stream().map(server -> mapper.toDTO(server)).toList();
         return Response.ok(serverDtoList).build();
     }
 
     @GET
     @Path("/{serverId}")
-    public Response getById(@PathParam("serverId") UUID serverId){
+    public Response getById(@PathParam("serverId") UUID serverId) {
         Server server = service.findById(serverId);
         return Response.ok(mapper.toDTO(server)).build();
     }
@@ -41,14 +41,14 @@ public class ServerController {
 
     @PUT
     @Path("/{serverId}")
-    public Response updateById(@PathParam("serverId") UUID serverId, @Valid ServerDto serverDto){
-        Server saved = service.update(serverId,mapper.toEntity(serverDto));
+    public Response updateById(@PathParam("serverId") UUID serverId, @Valid ServerDto serverDto) {
+        Server saved = service.update(serverId, mapper.toEntity(serverDto));
         return Response.ok(mapper.toDTO(saved)).build();
     }
 
     @DELETE
     @Path("/{serverId}")
-    public Response deleteById(@PathParam("serverId") UUID serverId){
+    public Response deleteById(@PathParam("serverId") UUID serverId) {
         service.delete(serverId);
         return Response.status(204).build();
     }

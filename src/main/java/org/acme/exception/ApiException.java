@@ -6,7 +6,7 @@ import java.text.MessageFormat;
 
 @Getter
 @Setter
-public abstract class ApiException extends RuntimeException{
+public abstract class ApiException extends RuntimeException {
     private final int statusCode;
     private final String errorMessage;
 

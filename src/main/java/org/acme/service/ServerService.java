@@ -4,26 +4,24 @@ import org.acme.model.Server;
 import org.acme.repository.ServerRepository;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.Response;
 
 @ApplicationScoped
 public class ServerService {
     @Inject
     private ServerRepository repository;
 
-    public List<Server> findAll(){
+    public List<Server> findAll() {
         return repository.findAll().list();
     }
 
-    public Server findById(UUID uuid){
+    public Server findById(UUID uuid) {
         Optional<Server> server = repository.findByIdOptional(uuid);
-        if(server.isEmpty())
+        if (server.isEmpty())
             throw new NotFoundException();
         return server.get();
 
@@ -36,9 +34,9 @@ public class ServerService {
     }
 
     @Transactional
-    public Server update(UUID uuid, Server server){
+    public Server update(UUID uuid, Server server) {
         Optional<Server> optionalServer = repository.findByIdOptional(uuid);
-        if(optionalServer.isEmpty())
+        if (optionalServer.isEmpty())
             throw new NotFoundException();
         Server serverToUpdate = optionalServer.get();
         serverToUpdate.setName(server.getName());
@@ -50,9 +48,9 @@ public class ServerService {
     }
 
     @Transactional
-    public void delete(UUID uuid){
+    public void delete(UUID uuid) {
         Optional<Server> server = repository.findByIdOptional(uuid);
-        if(server.isEmpty())
+        if (server.isEmpty())
             throw new NotFoundException();
         repository.deleteById(uuid);
     }

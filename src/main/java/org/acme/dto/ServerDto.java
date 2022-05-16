@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import javax.validation.constraints.*;
 
-public record ServerDto (
+public record ServerDto(
         UUID id,
         @NotBlank
         String name,
@@ -19,6 +19,5 @@ public record ServerDto (
 
         @NotNull @Min(value = 1, message = "number must be positive")
         Integer storage
-)
-{
+) {
 }
