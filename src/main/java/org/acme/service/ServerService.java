@@ -1,5 +1,6 @@
 package org.acme.service;
 
+import org.acme.exception.*;
 import org.acme.model.Server;
 import org.acme.repository.ServerRepository;
 
@@ -8,7 +9,6 @@ import java.util.*;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
-import javax.ws.rs.NotFoundException;
 
 @ApplicationScoped
 public class ServerService {
@@ -22,7 +22,7 @@ public class ServerService {
     public Server findById(UUID uuid) {
         Optional<Server> server = repository.findByIdOptional(uuid);
         if (server.isEmpty())
-            throw new NotFoundException();
+            throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
         return server.get();
 
     }
@@ -37,7 +37,7 @@ public class ServerService {
     public Server update(UUID uuid, Server server) {
         Optional<Server> optionalServer = repository.findByIdOptional(uuid);
         if (optionalServer.isEmpty())
-            throw new NotFoundException();
+            throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
         Server serverToUpdate = optionalServer.get();
         serverToUpdate.setName(server.getName());
         serverToUpdate.setCores(server.getCores());
@@ -51,7 +51,7 @@ public class ServerService {
     public void delete(UUID uuid) {
         Optional<Server> server = repository.findByIdOptional(uuid);
         if (server.isEmpty())
-            throw new NotFoundException();
+            throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
         repository.deleteById(uuid);
     }
 }

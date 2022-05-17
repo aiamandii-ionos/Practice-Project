@@ -8,11 +8,13 @@ import java.text.MessageFormat;
 @Setter
 public abstract class ApiException extends RuntimeException {
     private final int statusCode;
+    private final int errorCode;
     private final String errorMessage;
 
 
-    protected ApiException(int statusCode, String errorMessage, Object... params) {
+    protected ApiException(int statusCode, int errorCode, String errorMessage, Object... params) {
         this.statusCode = statusCode;
+        this.errorCode = errorCode;
         this.errorMessage = formatMessage(errorMessage, params);
     }
 
