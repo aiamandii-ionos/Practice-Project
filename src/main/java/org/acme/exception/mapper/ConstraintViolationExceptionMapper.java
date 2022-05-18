@@ -12,11 +12,10 @@ import javax.ws.rs.ext.*;
 public class ConstraintViolationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
     @Override
     public Response toResponse(ConstraintViolationException e) {
-        ExceptionResponseDto exceptionResponseDto = new ExceptionResponseDto(400, new ArrayList<>());
-        int errorCode = 4;
+        ExceptionResponseDto exceptionResponseDto = new ExceptionResponseDto(422, new ArrayList<>());
         for(ConstraintViolation<?> constraint: e.getConstraintViolations()){
-            exceptionResponseDto.errorMessages().add(new ExceptionDto(errorCode++,constraint.getMessage()));
+            exceptionResponseDto.errorMessages().add(new ExceptionDto(-1,constraint.getMessage()));
         }
-        return Response.status(Response.Status.BAD_REQUEST).entity(exceptionResponseDto).build();
+        return Response.status(422).entity(exceptionResponseDto).build();
     }
 }

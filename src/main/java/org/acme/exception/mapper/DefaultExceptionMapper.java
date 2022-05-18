@@ -17,9 +17,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
 
     @Override
     public Response toResponse(Throwable throwable) {
-        logger.error(throwable.getStackTrace());
-        logger.error(throwable.getMessage());
-        logger.error(throwable.getCause());
+        logger.error(throwable.getMessage(),throwable);
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode()).entity(new ExceptionResponseDto(500, List.of(new ExceptionDto(ErrorMessage.INTERNAL_SERVER_ERROR.getErrorCode(), ErrorMessage.INTERNAL_SERVER_ERROR.getErrorMessage())))).build();
     }
 }

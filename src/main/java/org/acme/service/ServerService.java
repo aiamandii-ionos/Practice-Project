@@ -43,10 +43,8 @@ public class ServerService {
     @Transactional
     public Server update(UUID uuid, Server server) {
         logger.info("update server by id");
-        Optional<Server> optionalServer = repository.findByIdOptional(uuid);
-        if (optionalServer.isEmpty())
-            throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
-        Server serverToUpdate = optionalServer.get();
+        Server serverToUpdate = repository.findByIdOptional(uuid).orElseThrow(() ->
+                new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
         serverToUpdate.setName(server.getName());
         serverToUpdate.setCores(server.getCores());
         serverToUpdate.setRam(server.getRam());
