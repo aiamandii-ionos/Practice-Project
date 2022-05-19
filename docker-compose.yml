@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 services:
   postgres:
     container_name: db
@@ -10,3 +10,13 @@ services:
       POSTGRES_DB: db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    command: start-dev
+    ports:
+      - '8181:8080'
+    environment:
+      DB_VENDOR: h2
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin

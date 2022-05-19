@@ -1,1 +1,1 @@
-INSERT INTO server(id, name, cores, ram, storage) VALUES ('a848a45e-d065-11ec-a62f-2d718d2fcfae','server2', 4, 34, 33);
+INSERT INTO server(user_id, id, name, cores, ram, storage) VALUES ('4365fd20-f38b-4e37-8e5c-0c4bd788e894', 'a848a45e-d065-11ec-a62f-2d718d2fcfae','server2', 4, 34, 33);

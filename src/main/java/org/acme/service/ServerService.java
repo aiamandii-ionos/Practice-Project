@@ -46,6 +46,7 @@ public class ServerService {
         Server serverToUpdate = repository.findByIdOptional(uuid).orElseThrow(() ->
                 new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
         serverToUpdate.setName(server.getName());
+        serverToUpdate.setUserId(server.getUserId());
         serverToUpdate.setCores(server.getCores());
         serverToUpdate.setRam(server.getRam());
         serverToUpdate.setStorage(server.getStorage());
