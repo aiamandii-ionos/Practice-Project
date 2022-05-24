@@ -36,14 +36,13 @@ public class ServerService {
     public Server findById(UUID uuid) {
         logger.info("find server by id");
         Optional<Server> server = repository.findByIdOptional(uuid);
-        if(server.isPresent()) {
+        if (server.isPresent()) {
             if (!securityIdentity.hasRole("admin")) {
-                if(!server.get().getUserId().toString().equals(jwt.getSubject()))
+                if (!server.get().getUserId().toString().equals(jwt.getSubject()))
                     throw new ForbiddenError(ErrorMessage.FORBIDDEN_ERROR, uuid);
             }
             return server.get();
-        }
-        else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
+        } else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
     }
 
     @Transactional
@@ -58,9 +57,9 @@ public class ServerService {
     public Server update(UUID uuid, Server server) {
         logger.info("update server by id");
         Optional<Server> serverToUpdate = repository.findByIdOptional(uuid);
-        if(serverToUpdate.isPresent()) {
+        if (serverToUpdate.isPresent()) {
             if (!securityIdentity.hasRole("admin")) {
-                if(!serverToUpdate.get().getUserId().toString().equals(jwt.getSubject()))
+                if (!serverToUpdate.get().getUserId().toString().equals(jwt.getSubject()))
                     throw new ForbiddenError(ErrorMessage.FORBIDDEN_ERROR, uuid);
             }
             serverToUpdate.get().setName(server.getName());
@@ -70,21 +69,19 @@ public class ServerService {
             serverToUpdate.get().setStorage(server.getStorage());
             repository.persist(serverToUpdate.get());
             return serverToUpdate.get();
-        }
-        else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
+        } else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
     }
 
     @Transactional
     public void delete(UUID uuid) {
         logger.info("delete server by id");
         Optional<Server> server = repository.findByIdOptional(uuid);
-        if(server.isPresent()) {
+        if (server.isPresent()) {
             if (!securityIdentity.hasRole("admin")) {
-                if(!server.get().getUserId().toString().equals(jwt.getSubject()))
+                if (!server.get().getUserId().toString().equals(jwt.getSubject()))
                     throw new ForbiddenError(ErrorMessage.FORBIDDEN_ERROR, uuid);
             }
             repository.deleteById(uuid);
-        }
-        else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
+        } else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
     }
 }
