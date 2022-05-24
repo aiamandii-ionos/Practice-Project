@@ -1,12 +1,15 @@
 package org.acme.service;
 
+import io.quarkus.security.identity.SecurityIdentity;
 import org.acme.exception.*;
 import org.acme.model.Server;
 import org.acme.repository.ServerRepository;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
 import java.util.*;
 
+import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -19,6 +22,12 @@ public class ServerService {
     @Inject
     private Logger logger;
 
+    @Inject
+    SecurityIdentity securityIdentity;
+
+    @Inject
+    JsonWebToken jwt;
+
     public List<Server> findAll() {
         logger.info("find all servers");
         return repository.findAll().list();
@@ -27,15 +36,20 @@ public class ServerService {
     public Server findById(UUID uuid) {
         logger.info("find server by id");
         Optional<Server> server = repository.findByIdOptional(uuid);
-        if (server.isEmpty())
-            throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
-        return server.get();
-
+        if(server.isPresent()) {
+            if (!securityIdentity.hasRole("admin")) {
+                if(!server.get().getUserId().toString().equals(jwt.getSubject()))
+                    throw new ForbiddenError(ErrorMessage.FORBIDDEN_ERROR, uuid);
+            }
+            return server.get();
+        }
+        else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
     }
 
     @Transactional
     public Server save(Server server) {
         logger.info("save server");
+        server.setUserId(UUID.fromString(jwt.getSubject()));
         repository.persist(server);
         return server;
     }
@@ -43,23 +57,34 @@ public class ServerService {
     @Transactional
     public Server update(UUID uuid, Server server) {
         logger.info("update server by id");
-        Server serverToUpdate = repository.findByIdOptional(uuid).orElseThrow(() ->
-                new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
-        serverToUpdate.setName(server.getName());
-        serverToUpdate.setUserId(server.getUserId());
-        serverToUpdate.setCores(server.getCores());
-        serverToUpdate.setRam(server.getRam());
-        serverToUpdate.setStorage(server.getStorage());
-        repository.persist(serverToUpdate);
-        return serverToUpdate;
+        Optional<Server> serverToUpdate = repository.findByIdOptional(uuid);
+        if(serverToUpdate.isPresent()) {
+            if (!securityIdentity.hasRole("admin")) {
+                if(!serverToUpdate.get().getUserId().toString().equals(jwt.getSubject()))
+                    throw new ForbiddenError(ErrorMessage.FORBIDDEN_ERROR, uuid);
+            }
+            serverToUpdate.get().setName(server.getName());
+            serverToUpdate.get().setUserId(UUID.fromString(jwt.getSubject()));
+            serverToUpdate.get().setCores(server.getCores());
+            serverToUpdate.get().setRam(server.getRam());
+            serverToUpdate.get().setStorage(server.getStorage());
+            repository.persist(serverToUpdate.get());
+            return serverToUpdate.get();
+        }
+        else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
     }
 
     @Transactional
     public void delete(UUID uuid) {
         logger.info("delete server by id");
         Optional<Server> server = repository.findByIdOptional(uuid);
-        if (server.isEmpty())
-            throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
-        repository.deleteById(uuid);
+        if(server.isPresent()) {
+            if (!securityIdentity.hasRole("admin")) {
+                if(!server.get().getUserId().toString().equals(jwt.getSubject()))
+                    throw new ForbiddenError(ErrorMessage.FORBIDDEN_ERROR, uuid);
+            }
+            repository.deleteById(uuid);
+        }
+        else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
     }
 }

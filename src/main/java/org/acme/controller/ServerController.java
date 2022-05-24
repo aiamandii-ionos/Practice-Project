@@ -7,6 +7,7 @@ import org.acme.service.ServerService;
 
 import java.util.*;
 
+import javax.annotation.security.*;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.*;
@@ -34,6 +35,7 @@ public class ServerController {
     }
 
     @POST
+    @Path("/create")
     public Response createServer(@Valid ServerDto serverDto) {
         final Server saved = service.save(mapper.toEntity(serverDto));
         return Response.status(Response.Status.CREATED).entity(mapper.toDTO(saved)).build();
