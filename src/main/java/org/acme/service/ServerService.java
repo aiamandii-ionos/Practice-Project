@@ -30,7 +30,7 @@ public class ServerService {
 
     public List<Server> findAll() {
         logger.info("find all servers");
-        return repository.findAll().list();
+        return repository.getAll();
     }
 
     public Server findById(UUID uuid) {
