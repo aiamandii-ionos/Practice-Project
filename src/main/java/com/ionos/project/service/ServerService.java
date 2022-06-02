@@ -4,7 +4,6 @@ import com.ionos.project.exception.*;
 import com.ionos.project.model.Server;
 import com.ionos.project.repository.ServerRepository;
 import io.quarkus.security.identity.SecurityIdentity;
-import com.ionos.project.exception.*;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
@@ -35,14 +34,10 @@ public class ServerService {
 
     public Server findById(UUID uuid) {
         logger.info("find server by id");
-        Optional<Server> server = repository.findByIdOptional(uuid);
-        if (server.isPresent()) {
-            if (!securityIdentity.hasRole("admin")) {
-                if (!server.get().getUserId().toString().equals(jwt.getSubject()))
-                    throw new NotFoundException(ErrorMessage.NOT_FOUND, uuid);
-            }
-            return server.get();
-        } else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
+        Server server = repository.findByIdOptional(uuid).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
+        if (!securityIdentity.hasRole("admin") && !server.getUserId().toString().equals(jwt.getSubject()))
+            throw new NotFoundException(ErrorMessage.NOT_FOUND, uuid);
+        return server;
     }
 
     @Transactional
@@ -56,32 +51,24 @@ public class ServerService {
     @Transactional
     public Server update(UUID uuid, Server server) {
         logger.info("update server by id");
-        Optional<Server> serverToUpdate = repository.findByIdOptional(uuid);
-        if (serverToUpdate.isPresent()) {
-            if (!securityIdentity.hasRole("admin")) {
-                if (!serverToUpdate.get().getUserId().toString().equals(jwt.getSubject()))
-                    throw new NotFoundException(ErrorMessage.NOT_FOUND, uuid);
-            }
-            serverToUpdate.get().setName(server.getName());
-            serverToUpdate.get().setUserId(UUID.fromString(jwt.getSubject()));
-            serverToUpdate.get().setCores(server.getCores());
-            serverToUpdate.get().setRam(server.getRam());
-            serverToUpdate.get().setStorage(server.getStorage());
-            repository.persist(serverToUpdate.get());
-            return serverToUpdate.get();
-        } else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
+        Server serverToUpdate = repository.findByIdOptional(uuid).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
+        if (!securityIdentity.hasRole("admin") && !serverToUpdate.getUserId().toString().equals(jwt.getSubject()))
+            throw new NotFoundException(ErrorMessage.NOT_FOUND, uuid);
+        serverToUpdate.setName(server.getName());
+        serverToUpdate.setUserId(UUID.fromString(jwt.getSubject()));
+        serverToUpdate.setCores(server.getCores());
+        serverToUpdate.setRam(server.getRam());
+        serverToUpdate.setStorage(server.getStorage());
+        repository.persist(serverToUpdate);
+        return serverToUpdate;
     }
 
     @Transactional
     public void delete(UUID uuid) {
         logger.info("delete server by id");
-        Optional<Server> server = repository.findByIdOptional(uuid);
-        if (server.isPresent()) {
-            if (!securityIdentity.hasRole("admin")) {
-                if (!server.get().getUserId().toString().equals(jwt.getSubject()))
-                    throw new NotFoundException(ErrorMessage.NOT_FOUND, uuid);
-            }
-            repository.deleteById(uuid);
-        } else throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
+        Server server = repository.findByIdOptional(uuid).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
+        if (!securityIdentity.hasRole("admin") && !server.getUserId().toString().equals(jwt.getSubject()))
+            throw new NotFoundException(ErrorMessage.NOT_FOUND, uuid);
+        repository.deleteById(uuid);
     }
 }
