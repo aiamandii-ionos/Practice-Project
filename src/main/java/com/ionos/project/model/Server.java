@@ -26,6 +26,12 @@ public class Server {
     @Column(name = "user_id")
     private UUID userId;
 
+    @Column(name = "datacenter_id")
+    private UUID dataCenterId;
+
+    @Column(name = "server_ionos_id")
+    private UUID serverIonosId;
+
     @Column(name = "name")
     private String name;
 

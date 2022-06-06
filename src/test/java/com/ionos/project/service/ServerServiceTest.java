@@ -2,9 +2,7 @@ package com.ionos.project.service;
 
 import com.ionos.project.model.Server;
 import com.ionos.project.repository.ServerRepository;
-import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.quarkus.test.junit.QuarkusTest;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
@@ -40,7 +38,7 @@ public class ServerServiceTest {
     SecurityIdentity securityIdentity;
 
     @Test
-    void saveServer_Success(){
+    void saveServer_Success() {
         UUID uuid = UUID.randomUUID();
 
         Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(uuid));
@@ -58,7 +56,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void saveServer_Failure(){
+    void saveServer_Failure() {
         UUID uuid = UUID.randomUUID();
 
         Server toBeSavedServer = Server.builder()
@@ -103,7 +101,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void getServerById_Success(){
+    void getServerById_Success() {
         UUID uuid = UUID.randomUUID();
         Server server = Server.builder()
                 .id(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))
@@ -123,7 +121,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void getServerById_Failure(){
+    void getServerById_Failure() {
         UUID uuid = UUID.randomUUID();
 
         Mockito.when(repository.findByIdOptional(any(UUID.class))).thenThrow(new NotFoundException());
@@ -135,7 +133,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void getServerById_FailurePermission(){
+    void getServerById_FailurePermission() {
         UUID uuid = UUID.randomUUID();
         Server server = Server.builder()
                 .id(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))
@@ -179,7 +177,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void deleteServer_Failure(){
+    void deleteServer_Failure() {
         UUID uuid = UUID.randomUUID();
 
         Mockito.when(repository.findByIdOptional(uuid)).thenThrow(new NotFoundException());
@@ -191,7 +189,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void updateServer_Success(){
+    void updateServer_Success() {
         UUID uuid = UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae");
         UUID userUuid = UUID.randomUUID();
 
@@ -222,7 +220,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void updateServer_Failure(){
+    void updateServer_Failure() {
         UUID uuid = UUID.randomUUID();
         Server newServer = Server.builder()
                 .id(uuid)
