@@ -71,9 +71,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5-mockito</artifactId>
-            <version>2.8.3.Final</version>
+            <!-- support for @ExtendWith(MockitoExtension.class) -->
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -94,6 +94,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.ionoscloud</groupId>
+            <artifactId>ionos-cloud-sdk</artifactId>
+            <version>5.1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-validator</artifactId>
         </dependency>
@@ -106,6 +112,20 @@
             <artifactId>quarkus-keycloak-authorization</artifactId>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>oss.sonatype.org-snapshot</id>
+            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <build>
         <plugins>
             <plugin>
