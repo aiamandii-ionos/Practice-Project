@@ -9,6 +9,8 @@ import javax.validation.constraints.*;
 public record ServerDto(
         UUID id,
         UUID userId,
+        UUID serverIonosId,
+        UUID dataCenterId,
         @NotBlank(message = "Name must not be blank")
         String name,
 

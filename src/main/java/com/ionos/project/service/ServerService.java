@@ -3,6 +3,9 @@ package com.ionos.project.service;
 import com.ionos.project.exception.*;
 import com.ionos.project.model.Server;
 import com.ionos.project.repository.ServerRepository;
+import com.ionoscloud.ApiException;
+import com.ionoscloud.ApiResponse;
+import com.ionoscloud.model.Datacenter;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
@@ -17,6 +20,9 @@ import javax.transaction.Transactional;
 public class ServerService {
     @Inject
     private ServerRepository repository;
+
+    @Inject
+    private IonosCloudService ionosCloudService;
 
     @Inject
     private Logger logger;
@@ -44,8 +50,22 @@ public class ServerService {
     public Server save(Server server) {
         logger.info("save server");
         server.setUserId(UUID.fromString(jwt.getSubject()));
+        saveIonosServer(server);
         repository.persist(server);
         return server;
+    }
+
+    public void saveIonosServer(Server server){
+        ApiResponse<Datacenter> datacenterApiResponse = ionosCloudService.createDatacenter();
+        ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(datacenterApiResponse.getHeaders()));
+
+        UUID datacenterId = UUID.fromString(Objects.requireNonNull(datacenterApiResponse.getData().getId()));
+        server.setDataCenterId(datacenterId);
+
+        ApiResponse<com.ionoscloud.model.Server> serverResponse = ionosCloudService.createServer(datacenterApiResponse.getData(), server);
+        ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(serverResponse.getHeaders()));
+
+        server.setServerIonosId(UUID.fromString(Objects.requireNonNull(serverResponse.getData().getId())));
     }
 
     @Transactional
