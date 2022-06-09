@@ -33,16 +33,16 @@ public class IonosCloudService {
         prepareCredentials();
     }
 
-    public void prepareCredentials(){
+    public void prepareCredentials() {
         HttpBasicAuth basicAuthentication = (HttpBasicAuth) defaultClient.getAuthentication("Basic Authentication");
         basicAuthentication.setUsername(ConfigProvider
                 .getConfig().getValue("usernameIonos", String.class));
         basicAuthentication.setPassword(ConfigProvider
                 .getConfig().getValue("passwordIonos", String.class));
-        contractNumber = ConfigProvider.getConfig().getValue("contractNumberIonos",Integer.class);
+        contractNumber = ConfigProvider.getConfig().getValue("contractNumberIonos", Integer.class);
     }
 
-    public ApiResponse<Datacenter> createDatacenter(){
+    public ApiResponse<Datacenter> createDatacenter() {
         Datacenter datacenter = new Datacenter();
         DatacenterProperties datacenterProperties = new DatacenterProperties();
         datacenterProperties.setLocation("us/las");
@@ -53,19 +53,25 @@ public class IonosCloudService {
         ApiResponse<Datacenter> result = null;
         try {
             result = dataCenterApi.datacentersPostWithHttpInfo(datacenter,
-                        true, 0, contractNumber);
+                    true, 0, contractNumber);
         } catch (ApiException e) {
-            e.printStackTrace();
+            logger.error(e.getStackTrace());
+            logger.error("Status code " + e.getCode());
+            logger.error("Response body " + e.getResponseBody());
+            logger.error("Response headers " + e.getResponseHeaders());
         }
         return result;
     }
 
-    public Datacenters findAllDatacenters(){
+    public Datacenters findAllDatacenters() {
         Datacenters result = null;
         try {
-            result= dataCenterApi.datacentersGet(true, 0, contractNumber, 0, 1000);
+            result = dataCenterApi.datacentersGet(true, 0, contractNumber, 0, 1000);
         } catch (ApiException e) {
-            e.printStackTrace();
+            logger.error(e.getStackTrace());
+            logger.error("Status code " + e.getCode());
+            logger.error("Response body " + e.getResponseBody());
+            logger.error("Response headers " + e.getResponseHeaders());
         }
         return result;
     }
@@ -83,18 +89,19 @@ public class IonosCloudService {
             result = serverApi.datacentersServersPostWithHttpInfo(datacenter.getId(), serverIonos, true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
-            logger.error(e.getResponseBody());
-            logger.error(e.getResponseHeaders());
+            logger.error("Status code " + e.getCode());
+            logger.error("Response body " + e.getResponseBody());
+            logger.error("Response headers " + e.getResponseHeaders());
         }
         return result;
     }
 
-    public String getRequestId(Map<String, List<String>> headers){
+    public String getRequestId(Map<String, List<String>> headers) {
         String[] split = headers.get("location").toString().split("/");
-        return split[split.length-2];
+        return split[split.length - 2];
     }
 
-    public void checkRequestStatusIsDone(String requestId){
+    public void checkRequestStatusIsDone(String requestId) {
         try {
             RequestStatus requestStatus = requestApi.requestsStatusGet(requestId, true, 0, contractNumber);
             while (!Objects.equals(Objects.requireNonNull(requestStatus.getMetadata()).getStatus(), RequestStatusMetadata.StatusEnum.DONE)) {

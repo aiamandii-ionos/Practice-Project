@@ -55,13 +55,15 @@ public class ServerService {
         return server;
     }
 
-    public void saveIonosServer(Server server){
+    public void saveIonosServer(Server server) {
+        logger.info("create datacenter for Ionos Cloud");
         ApiResponse<Datacenter> datacenterApiResponse = ionosCloudService.createDatacenter();
         ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(datacenterApiResponse.getHeaders()));
 
         UUID datacenterId = UUID.fromString(Objects.requireNonNull(datacenterApiResponse.getData().getId()));
         server.setDataCenterId(datacenterId);
 
+        logger.info("create server for Ionos Cloud");
         ApiResponse<com.ionoscloud.model.Server> serverResponse = ionosCloudService.createServer(datacenterApiResponse.getData(), server);
         ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(serverResponse.getHeaders()));
 
