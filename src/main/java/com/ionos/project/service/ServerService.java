@@ -70,12 +70,27 @@ public class ServerService {
         server.setServerIonosId(UUID.fromString(Objects.requireNonNull(serverResponse.getData().getId())));
     }
 
+    public void deleteIonosServer(Server server){
+        logger.info("delete datacenter and server for Ionos Cloud");
+        ApiResponse<Object> deleteDatacenterApiResponse = ionosCloudService.deleteDatacenter(server.getDataCenterId().toString());
+        ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(deleteDatacenterApiResponse.getHeaders()));
+
+    }
+
+    public void updateIonosServer(Server serverToUpdate, Server newServer){
+        logger.info("update server for Ionos Cloud");
+        ApiResponse<com.ionoscloud.model.Server> updateServerApiResponse = ionosCloudService.updateServer
+                (serverToUpdate.getDataCenterId().toString(), serverToUpdate.getServerIonosId().toString(), newServer);
+        ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(updateServerApiResponse.getHeaders()));
+    }
+
     @Transactional
     public Server update(UUID uuid, Server server) {
         logger.info("update server by id");
         Server serverToUpdate = repository.findByIdOptional(uuid).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
         if (!securityIdentity.hasRole("admin") && !serverToUpdate.getUserId().toString().equals(jwt.getSubject()))
             throw new NotFoundException(ErrorMessage.NOT_FOUND, uuid);
+        updateIonosServer(serverToUpdate, server);
         serverToUpdate.setName(server.getName());
         serverToUpdate.setUserId(UUID.fromString(jwt.getSubject()));
         serverToUpdate.setCores(server.getCores());
@@ -91,6 +106,7 @@ public class ServerService {
         Server server = repository.findByIdOptional(uuid).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
         if (!securityIdentity.hasRole("admin") && !server.getUserId().toString().equals(jwt.getSubject()))
             throw new NotFoundException(ErrorMessage.NOT_FOUND, uuid);
+        deleteIonosServer(server);
         repository.deleteById(uuid);
     }
 }

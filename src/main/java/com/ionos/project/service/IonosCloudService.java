@@ -102,6 +102,7 @@ public class IonosCloudService {
     }
 
     public void checkRequestStatusIsDone(String requestId) {
+        logger.info("Check request status");
         try {
             RequestStatus requestStatus = requestApi.requestsStatusGet(requestId, true, 0, contractNumber);
             while (!Objects.equals(Objects.requireNonNull(requestStatus.getMetadata()).getStatus(), RequestStatusMetadata.StatusEnum.DONE)) {
@@ -118,5 +119,39 @@ public class IonosCloudService {
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
         }
+    }
+
+    public ApiResponse<Object> deleteDatacenter(String datacenterId){
+        try {
+            return dataCenterApi.datacentersDeleteWithHttpInfo(datacenterId, true, 0, contractNumber);
+        }
+        catch (ApiException e){
+            logger.error(e.getStackTrace());
+            logger.error("Status code " + e.getCode());
+            logger.error("Response body " + e.getResponseBody());
+            logger.error("Response headers " + e.getResponseHeaders());
+        }
+        return null;
+    }
+
+    public ApiResponse<Server> updateServer(String datacenterId, String serverId, com.ionos.project.model.Server server){
+        Server newServer = new Server();
+        ServerProperties serverProperties = new ServerProperties();
+        serverProperties.setName(server.getName());
+        serverProperties.setCores(server.getCores());
+        serverProperties.setRam(server.getRam());
+        newServer.setProperties(serverProperties);
+
+        ApiResponse<Server> result = null;
+        try {
+            result = serverApi.datacentersServersPutWithHttpInfo(datacenterId, serverId, newServer, true, 0, contractNumber);
+        }
+        catch (ApiException e){
+            logger.error(e.getStackTrace());
+            logger.error("Status code " + e.getCode());
+            logger.error("Response body " + e.getResponseBody());
+            logger.error("Response headers " + e.getResponseHeaders());
+        }
+        return result;
     }
 }
