@@ -5,6 +5,7 @@
       datacenter_id UUID NOT NULL,
       server_ionos_id UUID NOT NULL,
       ipblock_ionos_id UUID NOT NULL,
+      ip VARCHAR(100) NOT NULL,
       name VARCHAR(100) NOT NULL,
       cores INTEGER NOT NULL,
       ram INTEGER NOT NULL,

@@ -36,8 +36,8 @@ public class ServerService {
 
     public List<Server> findAll() {
         logger.info("find all servers");
-        System.out.println(ionosCloudService.findAllDatacenters());
-        System.out.println(ionosCloudService.findAllIpBlocks());
+//        System.out.println(ionosCloudService.findAllDatacenters());
+//        System.out.println(ionosCloudService.findAllIpBlocks());
         return repository.getAll();
     }
 
@@ -74,6 +74,7 @@ public class ServerService {
         ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(ipBlockApiResponse.getHeaders()));
         UUID ipBlockId = UUID.fromString(Objects.requireNonNull(ipBlockApiResponse.getData().getId()));
         server.setIpBlockIonosId(ipBlockId);
+        server.setIp(ipBlockApiResponse.getData().getProperties().getIps().get(0));
 
         logger.info("create volume for Ionos Cloud");
         //ApiResponse<Volume> volumeApiResponse = ionosCloudService.createVolume(Objects.requireNonNull(datacenterApiResponse.getData().getId()), server.getStorage());

@@ -59,43 +59,40 @@ public class IonosCloudService {
         datacenterProperties.setSecAuthProtection(true);
         datacenter.setProperties(datacenterProperties);
 
-        ApiResponse<Datacenter> result = null;
         try {
-            result = dataCenterApi.datacentersPostWithHttpInfo(datacenter,
+            return dataCenterApi.datacentersPostWithHttpInfo(datacenter,
                     true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return result;
     }
 
     public Datacenters findAllDatacenters() {
-        Datacenters result = null;
         try {
-            result = dataCenterApi.datacentersGet(true, 0, contractNumber, 0, 1000);
+            return dataCenterApi.datacentersGet(true, 0, contractNumber, 0, 1000);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return result;
     }
 
     public IpBlocks findAllIpBlocks() {
-        IpBlocks result = null;
         try {
-            result = ipBlockApi.ipblocksGet(true, 0, contractNumber);
+            return ipBlockApi.ipblocksGet(true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return result;
     }
 
     public ApiResponse<Server> createServer(String datacenterId, com.ionos.project.model.Server server) {
@@ -106,16 +103,15 @@ public class IonosCloudService {
         serverProperties.setRam(server.getRam());
         serverIonos.setProperties(serverProperties);
 
-        ApiResponse<Server> result = null;
         try {
-            result = serverApi.datacentersServersPostWithHttpInfo(datacenterId, serverIonos, true, 0, contractNumber);
+            return serverApi.datacentersServersPostWithHttpInfo(datacenterId, serverIonos, true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return result;
     }
 
     public String getRequestId(Map<String, List<String>> headers) {
@@ -128,18 +124,18 @@ public class IonosCloudService {
         try {
             RequestStatus requestStatus = requestApi.requestsStatusGet(requestId, true, 0, contractNumber);
             while (!Objects.equals(Objects.requireNonNull(requestStatus.getMetadata()).getStatus(), RequestStatusMetadata.StatusEnum.DONE)) {
-                //logger.info(requestStatus);
                 if (Objects.requireNonNull(requestStatus.getMetadata().getStatus()).equals(RequestStatusMetadata.StatusEnum.FAILED)) {
                     throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
                 }
                 requestStatus = requestApi.requestsStatusGet(requestId, true, 0, contractNumber);
             }
-            //logger.info("Final status" + requestStatus);
+            logger.info("Final status" + requestStatus);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -151,8 +147,8 @@ public class IonosCloudService {
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return null;
     }
 
     public ApiResponse<Server> updateServer(String datacenterId, String serverId, com.ionos.project.model.Server server) {
@@ -163,16 +159,15 @@ public class IonosCloudService {
         serverProperties.setRam(server.getRam());
         newServer.setProperties(serverProperties);
 
-        ApiResponse<Server> result = null;
         try {
-            result = serverApi.datacentersServersPutWithHttpInfo(datacenterId, serverId, newServer, true, 0, contractNumber);
+            return serverApi.datacentersServersPutWithHttpInfo(datacenterId, serverId, newServer, true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return result;
     }
 
     public ApiResponse<IpBlock> createIpBlock() {
@@ -182,17 +177,16 @@ public class IonosCloudService {
         ipBlockProperties.setSize(1);
         ipBlockProperties.setName("Ip block");
         ipBlock.setProperties(ipBlockProperties);
-        ApiResponse<IpBlock> response = null;
 
         try {
-            response = ipBlockApi.ipblocksPostWithHttpInfo(ipBlock, true, 0, contractNumber);
+            return ipBlockApi.ipblocksPostWithHttpInfo(ipBlock, true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return response;
     }
 
     public ApiResponse<Object> deleteIpBlock(String ipBlockId) {
@@ -203,8 +197,8 @@ public class IonosCloudService {
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return null;
     }
 
     public ApiResponse<Volume> createVolume(String datacenterId, Integer storage) {
@@ -212,20 +206,19 @@ public class IonosCloudService {
         VolumeProperties volumeProperties = new VolumeProperties();
         volumeProperties.setName("Volume");
         volumeProperties.setSize(BigDecimal.valueOf(storage));
-        volumeProperties.setImageAlias("Image alias");
+        volumeProperties.setImageAlias("ubuntu:latest");
         volumeProperties.setType(VolumeProperties.TypeEnum.HDD);
         volume.setProperties(volumeProperties);
 
-        ApiResponse<Volume> volumeApiResponse = null;
         try {
-            volumeApiResponse = volumeApi.datacentersVolumesPostWithHttpInfo(datacenterId, volume, true, 0, contractNumber);
+            return volumeApi.datacentersVolumesPostWithHttpInfo(datacenterId, volume, true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return volumeApiResponse;
     }
 
     public ApiResponse<Object> deleteVolume(String dataCenterId, String volumeId) {
@@ -236,8 +229,8 @@ public class IonosCloudService {
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return null;
     }
 
     public ApiResponse<LanPost> createLan(String dataCenterId) {
@@ -247,16 +240,15 @@ public class IonosCloudService {
         lanPropertiesPost.setPublic(true);
         lan.setProperties(lanPropertiesPost);
 
-        ApiResponse<LanPost> response = null;
         try {
-            response = lanApi.datacentersLansPostWithHttpInfo(dataCenterId, lan, true, 0, contractNumber);
+            return lanApi.datacentersLansPostWithHttpInfo(dataCenterId, lan, true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return response;
     }
 
     public ApiResponse<Object> deleteLan(String dataCenterId, String lanId) {
@@ -267,8 +259,8 @@ public class IonosCloudService {
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return null;
     }
 
     public ApiResponse<Nic> createNic(IpBlock ipBlock, LanPost lanPost, String dataCenterId, String serverId) {
@@ -279,16 +271,15 @@ public class IonosCloudService {
         nicProperties.setLan(Integer.valueOf(Objects.requireNonNull(lanPost.getId())));
         nic.setProperties(nicProperties);
 
-        ApiResponse<Nic> response = null;
         try {
-            response = nicApi.datacentersServersNicsPostWithHttpInfo(dataCenterId, serverId, nic, true, 0, contractNumber);
+            return nicApi.datacentersServersNicsPostWithHttpInfo(dataCenterId, serverId, nic, true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return response;
     }
 
     public ApiResponse<Object> deleteNic(String dataCenterId, String serverId, String nicId) {
@@ -299,7 +290,7 @@ public class IonosCloudService {
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
+            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        return null;
     }
 }
