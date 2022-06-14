@@ -35,6 +35,9 @@ public class Server {
     @Column(name = "ipblock_ionos_id")
     private UUID ipBlockIonosId;
 
+    @Column(name = "volume_id")
+    private UUID volumeId;
+
     @Column(name = "ip")
     private String ip;
 

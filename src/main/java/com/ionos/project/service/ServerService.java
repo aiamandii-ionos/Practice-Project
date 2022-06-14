@@ -103,6 +103,7 @@ public class ServerService {
         server.setPrivateKey(keyPair.getPrivate().toString());
         ApiResponse<Volume> volumeApiResponse = ionosCloudService.createVolume(String.valueOf(datacenterId), String.valueOf(keyPair.getPublic()), server.getStorage());
         ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(volumeApiResponse.getHeaders()));
+        server.setVolumeId(UUID.fromString(Objects.requireNonNull(volumeApiResponse.getData().getId())));
 
         logger.info("create nic for Ionos Cloud");
         ApiResponse<Nic> nicApiResponse = ionosCloudService.createNic(ipBlockApiResponse.getData(), lanPostApiResponse.getData(), String.valueOf(datacenterId), serverResponse.getData().getId());
@@ -117,7 +118,8 @@ public class ServerService {
         logger.info("delete ip blocks for Ionos Cloud");
         ionosCloudService.deleteIpBlock(String.valueOf(server.getIpBlockIonosId()));
 
-        //ionosCloudService.deleteVolume(server.getDataCenterId().toString())
+        logger.info("delete volume for Ionos Cloud");
+        ionosCloudService.deleteVolume(server.getDataCenterId().toString(), server.getVolumeId().toString());
     }
 
     public void updateIonosServer(Server serverToUpdate, Server newServer) {
