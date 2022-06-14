@@ -49,4 +49,7 @@ public class Server {
 
     @Column(name = "storage")
     private Integer storage;
+
+    @Column(length = 2048, name = "private_key")
+    private String privateKey;
 }

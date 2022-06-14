@@ -51,49 +51,6 @@ public class IonosCloudService {
         contractNumber = ConfigProvider.getConfig().getValue("contractNumberIonos", Integer.class);
     }
 
-    public ApiResponse<Datacenter> createDatacenter() {
-        Datacenter datacenter = new Datacenter();
-        DatacenterProperties datacenterProperties = new DatacenterProperties();
-        datacenterProperties.setLocation("us/las");
-        datacenterProperties.setName("Datacenter");
-        datacenterProperties.setSecAuthProtection(true);
-        datacenter.setProperties(datacenterProperties);
-
-        try {
-            return dataCenterApi.datacentersPostWithHttpInfo(datacenter,
-                    true, 0, contractNumber);
-        } catch (ApiException e) {
-            logger.error(e.getStackTrace());
-            logger.error("Status code " + e.getCode());
-            logger.error("Response body " + e.getResponseBody());
-            logger.error("Response headers " + e.getResponseHeaders());
-            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    public Datacenters findAllDatacenters() {
-        try {
-            return dataCenterApi.datacentersGet(true, 0, contractNumber, 0, 1000);
-        } catch (ApiException e) {
-            logger.error(e.getStackTrace());
-            logger.error("Status code " + e.getCode());
-            logger.error("Response body " + e.getResponseBody());
-            logger.error("Response headers " + e.getResponseHeaders());
-            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    public IpBlocks findAllIpBlocks() {
-        try {
-            return ipBlockApi.ipblocksGet(true, 0, contractNumber);
-        } catch (ApiException e) {
-            logger.error(e.getStackTrace());
-            logger.error("Status code " + e.getCode());
-            logger.error("Response body " + e.getResponseBody());
-            logger.error("Response headers " + e.getResponseHeaders());
-            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
-        }
-    }
 
     public ApiResponse<Server> createServer(String datacenterId, com.ionos.project.model.Server server) {
         Server serverIonos = new Server();
@@ -129,7 +86,7 @@ public class IonosCloudService {
                 }
                 requestStatus = requestApi.requestsStatusGet(requestId, true, 0, contractNumber);
             }
-            logger.info("Final status" + requestStatus);
+            logger.info("Final status " + requestStatus);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
@@ -139,9 +96,9 @@ public class IonosCloudService {
         }
     }
 
-    public ApiResponse<Object> deleteDatacenter(String datacenterId) {
+    public ApiResponse<Object> deleteServer(String datacenterId, String serverId) {
         try {
-            return dataCenterApi.datacentersDeleteWithHttpInfo(datacenterId, true, 0, contractNumber);
+            return serverApi.datacentersServersDeleteWithHttpInfo(datacenterId, serverId, true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
@@ -201,13 +158,15 @@ public class IonosCloudService {
         }
     }
 
-    public ApiResponse<Volume> createVolume(String datacenterId, Integer storage) {
+    public ApiResponse<Volume> createVolume(String datacenterId, String publicKey, Integer storage) {
         Volume volume = new Volume();
         VolumeProperties volumeProperties = new VolumeProperties();
         volumeProperties.setName("Volume");
         volumeProperties.setSize(BigDecimal.valueOf(storage));
         volumeProperties.setImageAlias("ubuntu:latest");
+        volumeProperties.setImagePassword("password123");
         volumeProperties.setType(VolumeProperties.TypeEnum.HDD);
+        volumeProperties.setSshKeys(List.of(publicKey));
         volume.setProperties(volumeProperties);
 
         try {
