@@ -4,12 +4,14 @@ import com.ionos.project.validator.RamConstraint;
 
 import java.util.UUID;
 
+import javax.persistence.Column;
 import javax.validation.constraints.*;
 
 public record ServerDto(
         UUID id,
         UUID userId,
         String ip,
+        String privateKey,
 
         @NotBlank(message = "Name must not be blank")
         String name,

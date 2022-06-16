@@ -158,7 +158,7 @@ public class IonosCloudService {
         }
     }
 
-    public ApiResponse<Volume> createVolume(String datacenterId, String publicKey, Integer storage) {
+    public ApiResponse<Volume> attachVolume(String datacenterId, String serverId, String publicKey, Integer storage){
         Volume volume = new Volume();
         VolumeProperties volumeProperties = new VolumeProperties();
         volumeProperties.setName("Volume");
@@ -168,9 +168,8 @@ public class IonosCloudService {
         volumeProperties.setType(VolumeProperties.TypeEnum.HDD);
         volumeProperties.setSshKeys(List.of(publicKey));
         volume.setProperties(volumeProperties);
-
         try {
-            return volumeApi.datacentersVolumesPostWithHttpInfo(datacenterId, volume, true, 0, contractNumber);
+            return serverApi.datacentersServersVolumesPostWithHttpInfo(datacenterId, serverId, volume, true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
@@ -178,6 +177,7 @@ public class IonosCloudService {
             logger.error("Response headers " + e.getResponseHeaders());
             throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
         }
+
     }
 
     public ApiResponse<Object> deleteVolume(String dataCenterId, String volumeId) {

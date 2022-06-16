@@ -39,7 +39,6 @@ public class ServerController {
     @Path("/create")
     public Response createServer(@Valid ServerDto serverDto) {
         final Server saved = service.save(mapper.toEntity(serverDto));
-        System.out.println("vrea sa returneze response");
         return Response.status(Response.Status.CREATED).entity(mapper.toDTO(saved)).build();
     }
 

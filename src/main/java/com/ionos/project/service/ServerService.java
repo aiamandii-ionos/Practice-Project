@@ -7,12 +7,13 @@ import com.ionos.project.repository.ServerRepository;
 import com.ionoscloud.ApiException;
 import com.ionoscloud.ApiResponse;
 import com.ionoscloud.model.*;
+import com.jcraft.jsch.*;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
-import java.security.*;
+import java.io.*;
 import java.util.*;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -63,18 +64,6 @@ public class ServerService {
         return server;
     }
 
-    public KeyPair generateSSHKey() {
-        KeyPairGenerator keyGen = null;
-        try {
-            keyGen = KeyPairGenerator.getInstance("RSA");
-            keyGen.initialize(2048);
-            return keyGen.genKeyPair();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     public void saveIonosServer(Server server) {
         logger.info("Set datacenter id for server");
         UUID datacenterId = ConfigProvider.getConfig().getValue("datacenterId", UUID.class);
@@ -97,13 +86,33 @@ public class ServerService {
         ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(serverResponse.getHeaders()));
         server.setServerIonosId(UUID.fromString(Objects.requireNonNull(serverResponse.getData().getId())));
 
+        logger.info("generate ssh key for server");
+        String privateKey;
+        String publicKey;
+        try (ByteArrayOutputStream pubKeyOS = new ByteArrayOutputStream()) {
+            try (ByteArrayOutputStream prvKeyOS = new ByteArrayOutputStream()) {
+                JSch jsch = new JSch();
+                KeyPair keypair = KeyPair.genKeyPair(jsch, KeyPair.RSA, 2048);
+                keypair.writePrivateKey(prvKeyOS);
+                keypair.writePublicKey(pubKeyOS, "key");
+                publicKey = pubKeyOS.toString().substring(0, pubKeyOS.toString().length()-1);
+                privateKey = prvKeyOS.toString();
+                keypair.dispose();
 
-        logger.info("create volume for Ionos Cloud");
-        KeyPair keyPair = generateSSHKey();
-        server.setPrivateKey(keyPair.getPrivate().toString());
-        ApiResponse<Volume> volumeApiResponse = ionosCloudService.createVolume(String.valueOf(datacenterId), String.valueOf(keyPair.getPublic()), server.getStorage());
-        ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(volumeApiResponse.getHeaders()));
-        server.setVolumeId(UUID.fromString(Objects.requireNonNull(volumeApiResponse.getData().getId())));
+            } catch (IOException | JSchException e) {
+                logger.error(e.getStackTrace());
+                throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
+            }
+        } catch (IOException e) {
+            logger.error(e.getStackTrace());
+            throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
+        }
+        server.setPrivateKey(privateKey);
+
+        logger.info("create and attach volume to server for Ionos Cloud");
+        ApiResponse<Volume> attachVolumeResponse = ionosCloudService.attachVolume(String.valueOf(datacenterId), String.valueOf(server.getServerIonosId()), publicKey, server.getStorage());
+        ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(attachVolumeResponse.getHeaders()));
+        server.setVolumeId(UUID.fromString(Objects.requireNonNull(attachVolumeResponse.getData().getId())));
 
         logger.info("create nic for Ionos Cloud");
         ApiResponse<Nic> nicApiResponse = ionosCloudService.createNic(ipBlockApiResponse.getData(), lanPostApiResponse.getData(), String.valueOf(datacenterId), serverResponse.getData().getId());
