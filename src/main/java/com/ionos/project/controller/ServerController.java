@@ -9,6 +9,7 @@ import com.ionoscloud.model.Datacenter;
 
 import java.util.*;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.ws.rs.*;
@@ -23,6 +24,7 @@ public class ServerController {
     private ServerMapper mapper;
 
     @GET
+    @RolesAllowed({"user", "admin"})
     public Response get() {
         List<ServerDto> serverDtoList = service.findAll().stream().map(server -> mapper.toDTO(server)).toList();
         return Response.ok(serverDtoList).build();
@@ -30,6 +32,7 @@ public class ServerController {
 
     @GET
     @Path("/{serverId}")
+    @RolesAllowed({"user", "admin"})
     public Response getById(@PathParam("serverId") UUID serverId) {
         Server server = service.findById(serverId);
         return Response.ok(mapper.toDTO(server)).build();
@@ -37,6 +40,7 @@ public class ServerController {
 
     @POST
     @Path("/create")
+    @RolesAllowed("user")
     public Response createServer(@Valid ServerDto serverDto) {
         final Server saved = service.save(mapper.toEntity(serverDto));
         return Response.status(Response.Status.CREATED).entity(mapper.toDTO(saved)).build();
@@ -44,6 +48,7 @@ public class ServerController {
 
     @PUT
     @Path("/{serverId}")
+    @RolesAllowed({"user", "admin"})
     public Response updateById(@PathParam("serverId") UUID serverId, @Valid ServerDto serverDto) {
         Server saved = service.update(serverId, mapper.toEntity(serverDto));
         return Response.ok(mapper.toDTO(saved)).build();
@@ -51,6 +56,7 @@ public class ServerController {
 
     @DELETE
     @Path("/{serverId}")
+    @RolesAllowed({"user", "admin"})
     public Response deleteById(@PathParam("serverId") UUID serverId) {
         service.delete(serverId);
         return Response.status(204).build();

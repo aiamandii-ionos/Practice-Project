@@ -11,5 +11,5 @@
       cores INTEGER NOT NULL,
       ram INTEGER NOT NULL,
       storage INTEGER NOT NULL,
-      private_key VARCHAR(2048) NOT NULL
+      private_key VARCHAR(4096) NOT NULL
   );

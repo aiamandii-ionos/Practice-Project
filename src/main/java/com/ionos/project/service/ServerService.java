@@ -22,7 +22,6 @@ import javax.transaction.Transactional;
 
 
 //change keycloak to use roles allowed in code
-//ssh key
 //modify tests
 //scenario outline
 @ApplicationScoped
@@ -107,7 +106,7 @@ public class ServerService {
             logger.error(e.getStackTrace());
             throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        server.setPrivateKey(privateKey);
+        server.setPrivateKey(Base64.getEncoder().encodeToString(privateKey.getBytes()));
 
         logger.info("create and attach volume to server for Ionos Cloud");
         ApiResponse<Volume> attachVolumeResponse = ionosCloudService.attachVolume(String.valueOf(datacenterId), String.valueOf(server.getServerIonosId()), publicKey, server.getStorage());
