@@ -21,7 +21,6 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 
-//change keycloak to use roles allowed in code
 //modify tests
 //scenario outline
 @ApplicationScoped
@@ -58,7 +57,7 @@ public class ServerService {
     public Server save(Server server) {
         logger.info("save server");
         server.setUserId(UUID.fromString(jwt.getSubject()));
-        saveIonosServer(server);
+        //saveIonosServer(server);
         repository.persist(server);
         return server;
     }
@@ -143,7 +142,7 @@ public class ServerService {
         Server serverToUpdate = repository.findByIdOptional(uuid).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
         if (!securityIdentity.hasRole("admin") && !serverToUpdate.getUserId().toString().equals(jwt.getSubject()))
             throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
-        updateIonosServer(serverToUpdate, server);
+        //updateIonosServer(serverToUpdate, server);
         serverToUpdate.setName(server.getName());
         serverToUpdate.setUserId(UUID.fromString(jwt.getSubject()));
         serverToUpdate.setCores(server.getCores());
@@ -159,7 +158,7 @@ public class ServerService {
         Server server = repository.findByIdOptional(uuid).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
         if (!securityIdentity.hasRole("admin") && !server.getUserId().toString().equals(jwt.getSubject()))
             throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
-        deleteIonosServer(server);
+        //deleteIonosServer(server);
         repository.deleteById(uuid);
     }
 }
