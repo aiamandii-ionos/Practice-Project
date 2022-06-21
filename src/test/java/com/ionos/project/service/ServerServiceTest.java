@@ -1,7 +1,11 @@
 package com.ionos.project.service;
 
+import com.ionos.project.model.*;
 import com.ionos.project.model.Server;
 import com.ionos.project.repository.ServerRepository;
+import com.ionoscloud.ApiResponse;
+import com.ionoscloud.api.IpBlocksApi;
+import com.ionoscloud.model.*;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
@@ -11,8 +15,8 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.*;
+import java.util.regex.*;
 
-import javax.persistence.PersistenceException;
 import javax.ws.rs.NotFoundException;
 
 import static org.assertj.core.api.Assertions.*;
@@ -23,10 +27,16 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class ServerServiceTest {
     @InjectMocks
-    ServerService service;
+    ServerService serverService;
 
     @Mock
     ServerRepository repository;
+
+    @Mock
+    IonosCloudService ionosCloudService;
+
+    @Mock
+    IpBlocksApi ipBlocksApi;
 
     @Mock
     Logger logger;
@@ -37,9 +47,25 @@ public class ServerServiceTest {
     @Mock
     SecurityIdentity securityIdentity;
 
+    Map<String, List<String>> generateHeaders(){
+        Pattern pattern = Pattern.compile("([-\\w]+)=\\[(.*?)]");
+        Matcher matcher = pattern.matcher("{access-control-allow-headers=[*], access-control-allow-methods=[*], access-control-allow-origin=[*], access-control-expose-headers=[*], content-length=[671], content-type=[application/json], date=[Mon, 20 Jun 2022 12:54:03 GMT], location=[https://api.ionos.com/cloudapi/v5/requests/6eaa56eb-328b-4c12-a891-b9c177a39fba/status], server=[nginx], x-frame-options=[SAMEORIGIN], x-ratelimit-burst=[50], x-ratelimit-limit=[120], x-ratelimit-remaining=[49]}");
+
+        Map<String, List<String>> map = new HashMap<>();
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            String val = matcher.group(2);
+
+            map.put(key, Arrays.asList(val.split("\\s,\\s")));
+        }
+        return map;
+    }
+
     @Test
     void saveServer_Success() {
         UUID uuid = UUID.randomUUID();
+
+        UUID datacenterId = UUID.fromString("b8ce4ef6-8bd0-462a-88f8-100d26b9126d");
 
         Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(uuid));
 
@@ -48,12 +74,53 @@ public class ServerServiceTest {
                 .cores(2)
                 .ram(200)
                 .storage(30)
+                .dataCenterId(datacenterId)
+                .serverIonosId(uuid)
+                .ipBlockIonosId(uuid)
+                .volumeId(uuid)
                 .name("server1").build();
 
         doNothing().when(repository).persist(toBeSavedServer);
-        Server result = service.save(toBeSavedServer);
+
+        Map<String, List<String>> map = generateHeaders();
+
+        IpBlock ipBlock = mock(IpBlock.class);
+        LanPost lanPost = mock(LanPost.class);
+        IpBlockProperties ipBlockProperties = mock(IpBlockProperties.class);
+        com.ionoscloud.model.Server server = mock(com.ionoscloud.model.Server.class);
+        ServerProperties serverProperties = mock(ServerProperties.class);
+        Volume volume = mock(Volume.class);
+        VolumeProperties volumeProperties = mock(VolumeProperties.class);
+        SshKey sshKey = mock(SshKey.class);
+
+        String id = "5efc1b40-d8d5-4e6f-913e-990016685c4a";
+        Mockito.when(ipBlock.getId()).thenReturn(id);
+        Mockito.when(ipBlock.getProperties()).thenReturn(ipBlockProperties);
+        Mockito.when(ipBlockProperties.getIps()).thenReturn(List.of("1.2.3.4"));
+        Mockito.when(server.getId()).thenReturn(id);
+        Mockito.when(server.getProperties()).thenReturn(serverProperties);
+        Mockito.when(volume.getId()).thenReturn(id);
+        Mockito.when(volume.getProperties()).thenReturn(volumeProperties);
+        //Mockito.when(service.generateSshKey()).thenReturn(sshKey);
+        Mockito.when(sshKey.getPublicKey()).thenReturn("ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC6ypId/KO/ugKtpqZVsdhTj+bIpvK4WWnsa2Ofcaruin/j1JmxZcJAwKRu7Wpip/RytAKeBP4MCkVjo4gSlCgZZ1cSe94WVbazFrB2lGpb6K6ajuVlXxcYIJ4X5K/1iqF+GAcTUUn+cS6bzck5KLUqvF7JUA+OS3evyw9PMqT41r1POITizb4zMmhA7aAiYILbF9/U3TdFfidgu/Z/CNGT/Pfy/C2u+BVmstOv8wR8bGL2mCTT0Anq3r6znqinhYc/2BI3WcDdNt6Oi7lrdzJ0smVpYUkIehrO7VixbTM2I9swWSfa4CtHRkxU7Ga8BloBaPBk5afwFG/X2Wf18vnn key");
+
+
+        ApiResponse<LanPost> apiResponse = new ApiResponse<>(202, map);
+        ApiResponse<IpBlock> apiResponseIpBlock = new ApiResponse<>(202, map, ipBlock);
+        ApiResponse<Nic> nicApiResponse = new ApiResponse<>(202, map);
+        ApiResponse<com.ionoscloud.model.Server> serverApiResponse = new ApiResponse<>(202, map, server);
+        ApiResponse<Volume> volumeApiResponse = new ApiResponse<>(202, map, volume);
+
+        Mockito.when(ionosCloudService.createLan(String.valueOf(datacenterId))).thenReturn(apiResponse);
+        Mockito.when(ionosCloudService.createIpBlock()).thenReturn(apiResponseIpBlock);
+        Mockito.when(ionosCloudService.createNic(ipBlock, lanPost, datacenterId.toString(), toBeSavedServer.getServerIonosId().toString())).thenReturn(nicApiResponse);
+        Mockito.when(ionosCloudService.createServer(String.valueOf(datacenterId), toBeSavedServer)).thenReturn(serverApiResponse);
+        Mockito.when(ionosCloudService.attachVolume(datacenterId.toString(), server.getId(), sshKey.getPublicKey(), toBeSavedServer.getStorage())).thenReturn(volumeApiResponse);
+
+        Server result = serverService.save(toBeSavedServer);
         assertThat(result).isEqualTo(toBeSavedServer);
     }
+
 
     @Test
     void saveServer_Failure() {
@@ -68,9 +135,9 @@ public class ServerServiceTest {
 
         Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(uuid));
 
-        doThrow(new PersistenceException()).when(repository).persist(toBeSavedServer);
+        //doThrow(new PersistenceException()).when(repository).persist(toBeSavedServer);
         Exception exception = assertThrows(RuntimeException.class, () -> {
-            service.save(toBeSavedServer);
+            serverService.save(toBeSavedServer);
         });
         assertNotNull(exception);
     }
@@ -92,7 +159,7 @@ public class ServerServiceTest {
                 .thenReturn(List.of(toBeSavedServer));
 
         // When
-        List<Server> result = service.findAll();
+        List<Server> result = serverService.findAll();
 
         // Then
         verify(repository, times(1)).getAll();
@@ -115,7 +182,7 @@ public class ServerServiceTest {
         Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(uuid));
         Mockito.when(repository.findByIdOptional(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))).thenReturn(Optional.ofNullable(server));
 
-        Server serverGot = service.findById(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"));
+        Server serverGot = serverService.findById(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"));
 
         assertThat(serverGot).isEqualTo(server);
     }
@@ -127,7 +194,7 @@ public class ServerServiceTest {
         Mockito.when(repository.findByIdOptional(any(UUID.class))).thenThrow(new NotFoundException());
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
-            service.findById(uuid);
+            serverService.findById(uuid);
         });
         assertNotNull(exception);
     }
@@ -149,7 +216,7 @@ public class ServerServiceTest {
         Mockito.when(repository.findByIdOptional(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))).thenReturn(Optional.ofNullable(server));
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
-            service.findById(uuid);
+            serverService.findById(uuid);
         });
         assertNotNull(exception);
     }
@@ -165,14 +232,23 @@ public class ServerServiceTest {
                 .cores(2)
                 .ram(200)
                 .storage(30)
+                .dataCenterId(uuid)
+                .serverIonosId(uuid)
+                .ipBlockIonosId(uuid)
+                .volumeId(uuid)
                 .name("server1").build();
+
+        Map<String, List<String>> map = generateHeaders();
+
+        ApiResponse<Object> apiResponse = new ApiResponse<>(202, map);
 
         Mockito.when(securityIdentity.hasRole("admin")).thenReturn(false);
         Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(userUuid));
         Mockito.when(repository.findByIdOptional(uuid)).thenReturn(Optional.ofNullable(server));
         Mockito.when(repository.deleteById(uuid)).thenReturn(true);
+        Mockito.when(ionosCloudService.deleteServer(server.getDataCenterId().toString(), server.getServerIonosId().toString())).thenReturn(apiResponse);
 
-        service.delete(uuid);
+        serverService.delete(uuid);
         verify(repository, times(1)).deleteById(uuid);
     }
 
@@ -183,7 +259,7 @@ public class ServerServiceTest {
         Mockito.when(repository.findByIdOptional(uuid)).thenThrow(new NotFoundException());
 
         Exception exception = assertThrows(NotFoundException.class, () -> {
-            service.delete(uuid);
+            serverService.delete(uuid);
         });
         assertNotNull(exception);
     }
@@ -199,6 +275,9 @@ public class ServerServiceTest {
                 .cores(2)
                 .ram(200)
                 .storage(30)
+                .dataCenterId(uuid)
+                .serverIonosId(uuid)
+
                 .name("server1").build();
 
         Server newServer = Server.builder()
@@ -207,15 +286,22 @@ public class ServerServiceTest {
                 .cores(2)
                 .ram(200)
                 .storage(30)
+                .dataCenterId(uuid)
+                .serverIonosId(uuid)
                 .name("server2").build();
+
+        Map<String, List<String>> map = generateHeaders();
+
+        ApiResponse<com.ionoscloud.model.Server> apiResponse = new ApiResponse<>(202, map);
 
         Mockito.when(securityIdentity.hasRole("admin")).thenReturn(false);
         Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(userUuid));
 
         Mockito.when(repository.findByIdOptional(uuid)).thenReturn(Optional.ofNullable(oldServer));
         doNothing().when(repository).persist(newServer);
+        Mockito.when(ionosCloudService.updateServer(oldServer.getDataCenterId().toString(),oldServer.getServerIonosId().toString(), newServer)).thenReturn(apiResponse);
 
-        Server updated = service.update(uuid, newServer);
+        Server updated = serverService.update(uuid, newServer);
         assertThat(updated).isEqualTo(newServer);
     }
 
@@ -232,7 +318,7 @@ public class ServerServiceTest {
         Mockito.when(repository.findByIdOptional(uuid)).thenThrow(new NotFoundException());
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
-            service.update(uuid, newServer);
+            serverService.update(uuid, newServer);
         });
         assertNotNull(exception);
     }

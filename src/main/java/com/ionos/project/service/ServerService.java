@@ -2,6 +2,7 @@ package com.ionos.project.service;
 
 import com.ionos.project.exception.*;
 import com.ionos.project.exception.ErrorMessage;
+import com.ionos.project.model.*;
 import com.ionos.project.model.Server;
 import com.ionos.project.repository.ServerRepository;
 import com.ionoscloud.ApiException;
@@ -57,14 +58,14 @@ public class ServerService {
     public Server save(Server server) {
         logger.info("save server");
         server.setUserId(UUID.fromString(jwt.getSubject()));
-        //saveIonosServer(server);
+        saveIonosServer(server);
         repository.persist(server);
         return server;
     }
 
     public void saveIonosServer(Server server) {
         logger.info("Set datacenter id for server");
-        UUID datacenterId = ConfigProvider.getConfig().getValue("datacenterId", UUID.class);
+        UUID datacenterId = UUID.fromString("b8ce4ef6-8bd0-462a-88f8-100d26b9126d");
         server.setDataCenterId(datacenterId);
 
         logger.info("create lan for Ionos Cloud");
@@ -74,6 +75,7 @@ public class ServerService {
         logger.info("create ip block for Ionos Cloud");
         ApiResponse<IpBlock> ipBlockApiResponse = ionosCloudService.createIpBlock();
         ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(ipBlockApiResponse.getHeaders()));
+        System.out.println(ipBlockApiResponse.getData());
         UUID ipBlockId = UUID.fromString(Objects.requireNonNull(ipBlockApiResponse.getData().getId()));
         server.setIpBlockIonosId(ipBlockId);
         server.setIp(ipBlockApiResponse.getData().getProperties().getIps().get(0));
@@ -85,6 +87,20 @@ public class ServerService {
         server.setServerIonosId(UUID.fromString(Objects.requireNonNull(serverResponse.getData().getId())));
 
         logger.info("generate ssh key for server");
+        SshKey sshKey = generateSshKey();
+        server.setPrivateKey(Base64.getEncoder().encodeToString(sshKey.getPrivateKey().getBytes()));
+
+        logger.info("create and attach volume to server for Ionos Cloud");
+        ApiResponse<Volume> attachVolumeResponse = ionosCloudService.attachVolume(String.valueOf(datacenterId), String.valueOf(server.getServerIonosId()), sshKey.getPublicKey(), server.getStorage());
+        ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(attachVolumeResponse.getHeaders()));
+        server.setVolumeId(UUID.fromString(Objects.requireNonNull(attachVolumeResponse.getData().getId())));
+
+        logger.info("create nic for Ionos Cloud");
+        ApiResponse<Nic> nicApiResponse = ionosCloudService.createNic(ipBlockApiResponse.getData(), lanPostApiResponse.getData(), String.valueOf(datacenterId), serverResponse.getData().getId());
+        ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(nicApiResponse.getHeaders()));
+    }
+
+    public SshKey generateSshKey(){
         String privateKey;
         String publicKey;
         try (ByteArrayOutputStream pubKeyOS = new ByteArrayOutputStream()) {
@@ -96,6 +112,7 @@ public class ServerService {
                 publicKey = pubKeyOS.toString().substring(0, pubKeyOS.toString().length()-1);
                 privateKey = prvKeyOS.toString();
                 keypair.dispose();
+                return new SshKey(publicKey, privateKey);
 
             } catch (IOException | JSchException e) {
                 logger.error(e.getStackTrace());
@@ -105,16 +122,6 @@ public class ServerService {
             logger.error(e.getStackTrace());
             throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-        server.setPrivateKey(Base64.getEncoder().encodeToString(privateKey.getBytes()));
-
-        logger.info("create and attach volume to server for Ionos Cloud");
-        ApiResponse<Volume> attachVolumeResponse = ionosCloudService.attachVolume(String.valueOf(datacenterId), String.valueOf(server.getServerIonosId()), publicKey, server.getStorage());
-        ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(attachVolumeResponse.getHeaders()));
-        server.setVolumeId(UUID.fromString(Objects.requireNonNull(attachVolumeResponse.getData().getId())));
-
-        logger.info("create nic for Ionos Cloud");
-        ApiResponse<Nic> nicApiResponse = ionosCloudService.createNic(ipBlockApiResponse.getData(), lanPostApiResponse.getData(), String.valueOf(datacenterId), serverResponse.getData().getId());
-        ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(nicApiResponse.getHeaders()));
     }
 
     public void deleteIonosServer(Server server) {
@@ -142,7 +149,7 @@ public class ServerService {
         Server serverToUpdate = repository.findByIdOptional(uuid).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
         if (!securityIdentity.hasRole("admin") && !serverToUpdate.getUserId().toString().equals(jwt.getSubject()))
             throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
-        //updateIonosServer(serverToUpdate, server);
+        updateIonosServer(serverToUpdate, server);
         serverToUpdate.setName(server.getName());
         serverToUpdate.setUserId(UUID.fromString(jwt.getSubject()));
         serverToUpdate.setCores(server.getCores());
@@ -158,7 +165,7 @@ public class ServerService {
         Server server = repository.findByIdOptional(uuid).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
         if (!securityIdentity.hasRole("admin") && !server.getUserId().toString().equals(jwt.getSubject()))
             throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
-        //deleteIonosServer(server);
+        deleteIonosServer(server);
         repository.deleteById(uuid);
     }
 }
