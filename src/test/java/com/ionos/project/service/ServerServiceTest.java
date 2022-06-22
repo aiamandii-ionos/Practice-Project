@@ -98,14 +98,16 @@ public class ServerServiceTest {
         Mockito.when(ipBlock.getProperties()).thenReturn(ipBlockProperties);
         Mockito.when(ipBlockProperties.getIps()).thenReturn(List.of("1.2.3.4"));
         Mockito.when(server.getId()).thenReturn(id);
-        Mockito.when(server.getProperties()).thenReturn(serverProperties);
+//        Mockito.when(server.getProperties()).thenReturn(serverProperties);
         Mockito.when(volume.getId()).thenReturn(id);
-        Mockito.when(volume.getProperties()).thenReturn(volumeProperties);
-        //Mockito.when(service.generateSshKey()).thenReturn(sshKey);
-        Mockito.when(sshKey.getPublicKey()).thenReturn("ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC6ypId/KO/ugKtpqZVsdhTj+bIpvK4WWnsa2Ofcaruin/j1JmxZcJAwKRu7Wpip/RytAKeBP4MCkVjo4gSlCgZZ1cSe94WVbazFrB2lGpb6K6ajuVlXxcYIJ4X5K/1iqF+GAcTUUn+cS6bzck5KLUqvF7JUA+OS3evyw9PMqT41r1POITizb4zMmhA7aAiYILbF9/U3TdFfidgu/Z/CNGT/Pfy/C2u+BVmstOv8wR8bGL2mCTT0Anq3r6znqinhYc/2BI3WcDdNt6Oi7lrdzJ0smVpYUkIehrO7VixbTM2I9swWSfa4CtHRkxU7Ga8BloBaPBk5afwFG/X2Wf18vnn key");
+        //Mockito.when(volume.getProperties()).thenReturn(volumeProperties);
+//        Mockito.when(lanPost.getId()).thenReturn(id);
+
+        //Mockito.when(sshKey.getPublicKey()).thenReturn("ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC6ypId/KO/ugKtpqZVsdhTj+bIpvK4WWnsa2Ofcaruin/j1JmxZcJAwKRu7Wpip/RytAKeBP4MCkVjo4gSlCgZZ1cSe94WVbazFrB2lGpb6K6ajuVlXxcYIJ4X5K/1iqF+GAcTUUn+cS6bzck5KLUqvF7JUA+OS3evyw9PMqT41r1POITizb4zMmhA7aAiYILbF9/U3TdFfidgu/Z/CNGT/Pfy/C2u+BVmstOv8wR8bGL2mCTT0Anq3r6znqinhYc/2BI3WcDdNt6Oi7lrdzJ0smVpYUkIehrO7VixbTM2I9swWSfa4CtHRkxU7Ga8BloBaPBk5afwFG/X2Wf18vnn key");
 
 
-        ApiResponse<LanPost> apiResponse = new ApiResponse<>(202, map);
+        ApiResponse<LanPost> apiResponse = new ApiResponse<>(202, map, lanPost);
+        //Mockito.when(apiResponse.getData()).thenReturn(lanPost);
         ApiResponse<IpBlock> apiResponseIpBlock = new ApiResponse<>(202, map, ipBlock);
         ApiResponse<Nic> nicApiResponse = new ApiResponse<>(202, map);
         ApiResponse<com.ionoscloud.model.Server> serverApiResponse = new ApiResponse<>(202, map, server);
@@ -113,9 +115,13 @@ public class ServerServiceTest {
 
         Mockito.when(ionosCloudService.createLan(String.valueOf(datacenterId))).thenReturn(apiResponse);
         Mockito.when(ionosCloudService.createIpBlock()).thenReturn(apiResponseIpBlock);
-        Mockito.when(ionosCloudService.createNic(ipBlock, lanPost, datacenterId.toString(), toBeSavedServer.getServerIonosId().toString())).thenReturn(nicApiResponse);
+        Mockito.when(ionosCloudService.createNic(ipBlock, lanPost, datacenterId.toString(), server.getId())).thenReturn(nicApiResponse);
         Mockito.when(ionosCloudService.createServer(String.valueOf(datacenterId), toBeSavedServer)).thenReturn(serverApiResponse);
-        Mockito.when(ionosCloudService.attachVolume(datacenterId.toString(), server.getId(), sshKey.getPublicKey(), toBeSavedServer.getStorage())).thenReturn(volumeApiResponse);
+
+        String datacenter = datacenterId.toString();
+        String serv = server.getId();
+        Integer toBeSaved = toBeSavedServer.getStorage();
+        Mockito.when(ionosCloudService.attachVolume(eq(datacenter), eq(serv), anyString(), eq(toBeSaved))).thenReturn(volumeApiResponse);
 
         Server result = serverService.save(toBeSavedServer);
         assertThat(result).isEqualTo(toBeSavedServer);
