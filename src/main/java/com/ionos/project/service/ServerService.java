@@ -5,12 +5,10 @@ import com.ionos.project.exception.ErrorMessage;
 import com.ionos.project.model.*;
 import com.ionos.project.model.Server;
 import com.ionos.project.repository.ServerRepository;
-import com.ionoscloud.ApiException;
 import com.ionoscloud.ApiResponse;
 import com.ionoscloud.model.*;
 import com.jcraft.jsch.*;
 import io.quarkus.security.identity.SecurityIdentity;
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
@@ -22,8 +20,6 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 
-//modify tests
-//scenario outline
 @ApplicationScoped
 public class ServerService {
     @Inject

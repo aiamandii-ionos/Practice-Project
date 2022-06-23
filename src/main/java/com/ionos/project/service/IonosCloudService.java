@@ -210,18 +210,6 @@ public class IonosCloudService {
         }
     }
 
-    public ApiResponse<Object> deleteLan(String dataCenterId, String lanId) {
-        try {
-            return lanApi.datacentersLansDeleteWithHttpInfo(dataCenterId, lanId, true, 0, contractNumber);
-        } catch (ApiException e) {
-            logger.error(e.getStackTrace());
-            logger.error("Status code " + e.getCode());
-            logger.error("Response body " + e.getResponseBody());
-            logger.error("Response headers " + e.getResponseHeaders());
-            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     public ApiResponse<Nic> createNic(IpBlock ipBlock, LanPost lanPost, String dataCenterId, String serverId) {
         Nic nic = new Nic();
         NicProperties nicProperties = new NicProperties();
@@ -232,18 +220,6 @@ public class IonosCloudService {
 
         try {
             return nicApi.datacentersServersNicsPostWithHttpInfo(dataCenterId, serverId, nic, true, 0, contractNumber);
-        } catch (ApiException e) {
-            logger.error(e.getStackTrace());
-            logger.error("Status code " + e.getCode());
-            logger.error("Response body " + e.getResponseBody());
-            logger.error("Response headers " + e.getResponseHeaders());
-            throw new InternalServerError(com.ionos.project.exception.ErrorMessage.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    public ApiResponse<Object> deleteNic(String dataCenterId, String serverId, String nicId) {
-        try {
-            return nicApi.datacentersServersNicsDeleteWithHttpInfo(dataCenterId, serverId, nicId, true, 0, contractNumber);
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());
