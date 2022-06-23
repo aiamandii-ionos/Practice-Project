@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "cdi")
 public interface RequestMapper {
 
-    Request toEntity(RequestDto serverDTO);
+    Request toEntity(RequestDto requestDto);
 
     RequestDto toDTO(Request request);
 }

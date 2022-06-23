@@ -1,6 +1,5 @@
 package com.ionos.project.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ionos.project.model.enums.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -24,9 +23,6 @@ public class Request {
     )
     private UUID id;
 
-    @Column(name = "resource_id")
-    private UUID resourceId;
-
     @Enumerated(EnumType.STRING)
     private RequestType type;
 
@@ -44,4 +40,8 @@ public class Request {
 
     @Column(name = "user_id")
     private UUID userId;
+
+    @ManyToOne
+    @JoinColumn(name = "resource_id")
+    private Server server;
 }
