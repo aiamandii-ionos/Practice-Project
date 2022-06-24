@@ -27,7 +27,6 @@ public class RequestController {
         return Response.ok(requestDtoList).build();
     }
 
-
     @GET
     @Path("/{id}")
     public Response getById(@PathParam("id") UUID id) {
