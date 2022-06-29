@@ -22,8 +22,8 @@ public class RequestController {
     RequestMapper requestMapper;
 
     @GET
-    public Response get() {
-        List<RequestDto> requestDtoList = requestService.findAll().stream().map(request -> requestMapper.toDTO(request)).toList();
+    public Response getAll() {
+        List<GetAllRequestsDto> requestDtoList = requestService.findAll().stream().map(request -> requestMapper.toGetAllRequestsDto(request)).toList();
         return Response.ok(requestDtoList).build();
     }
 

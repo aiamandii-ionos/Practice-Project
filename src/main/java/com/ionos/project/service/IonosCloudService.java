@@ -200,7 +200,9 @@ public class IonosCloudService {
         lan.setProperties(lanPropertiesPost);
 
         try {
-            return lanApi.datacentersLansPostWithHttpInfo(dataCenterId, lan, true, 0, contractNumber);
+            ApiResponse<LanPost> response= lanApi.datacentersLansPostWithHttpInfo(dataCenterId, lan, true, 0, contractNumber);
+            System.out.println(response.getData());
+            return response;
         } catch (ApiException e) {
             logger.error(e.getStackTrace());
             logger.error("Status code " + e.getCode());

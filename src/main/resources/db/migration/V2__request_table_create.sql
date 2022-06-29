@@ -1,6 +1,6 @@
     CREATE TABLE request (
-      id UUID NOT NULL PRIMARY KEY DEFAULT uuid_generate_v1(),
-      resource_id UUID NOT NULL,
+      request_id UUID NOT NULL PRIMARY KEY DEFAULT uuid_generate_v1(),
+      resource_id UUID,
       type VARCHAR(100) NOT NULL,
       status VARCHAR(100) NOT NULL,
       properties VARCHAR(500),
