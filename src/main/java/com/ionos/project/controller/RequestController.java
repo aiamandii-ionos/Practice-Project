@@ -13,7 +13,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
 @Path("/api/requests")
-@RolesAllowed({"user","admin"})
+@RolesAllowed({"user", "admin"})
 public class RequestController {
     @Inject
     RequestService requestService;

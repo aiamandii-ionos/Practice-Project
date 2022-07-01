@@ -96,7 +96,7 @@ public class ServerService {
         ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(nicApiResponse.getHeaders()));
     }
 
-    public SshKey generateSshKey(){
+    public SshKey generateSshKey() {
         String privateKey;
         String publicKey;
         try (ByteArrayOutputStream pubKeyOS = new ByteArrayOutputStream()) {
@@ -105,7 +105,7 @@ public class ServerService {
                 KeyPair keypair = KeyPair.genKeyPair(jsch, KeyPair.RSA, 2048);
                 keypair.writePrivateKey(prvKeyOS);
                 keypair.writePublicKey(pubKeyOS, "key");
-                publicKey = pubKeyOS.toString().substring(0, pubKeyOS.toString().length()-1);
+                publicKey = pubKeyOS.toString().substring(0, pubKeyOS.toString().length() - 1);
                 privateKey = prvKeyOS.toString();
                 keypair.dispose();
                 return new SshKey(publicKey, privateKey);

@@ -1,6 +1,5 @@
 package com.ionos.project.dto;
 
-import com.fasterxml.jackson.annotation.*;
 import com.ionos.project.model.enums.*;
 
 import java.time.LocalDateTime;

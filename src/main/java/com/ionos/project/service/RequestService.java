@@ -39,7 +39,7 @@ public class RequestService {
     }
 
     @Transactional
-    public Request createRequestForServerCreate(Server server){
+    public Request createRequestForServerCreate(Server server) {
         UUID userId = UUID.fromString(jwt.getSubject());
         try {
             String properties = new ObjectMapper().writeValueAsString(server);
@@ -53,7 +53,7 @@ public class RequestService {
     }
 
     @Transactional
-    public Request createRequestForServerUpdate(Server server, UUID serverId){
+    public Request createRequestForServerUpdate(Server server, UUID serverId) {
         UUID userId = UUID.fromString(jwt.getSubject());
         Server serverToUpdate = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
         if (!securityIdentity.hasRole("admin") && !serverToUpdate.getUserId().toString().equals(jwt.getSubject()))
@@ -70,7 +70,7 @@ public class RequestService {
     }
 
     @Transactional
-    public Request createRequestForServerDelete(UUID serverId){
+    public Request createRequestForServerDelete(UUID serverId) {
         UUID userId = UUID.fromString(jwt.getSubject());
         Server server = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
         if (!securityIdentity.hasRole("admin") && !server.getUserId().toString().equals(jwt.getSubject()))

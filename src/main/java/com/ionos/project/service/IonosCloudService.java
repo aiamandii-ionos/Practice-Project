@@ -158,7 +158,7 @@ public class IonosCloudService {
         }
     }
 
-    public ApiResponse<Volume> attachVolume(String datacenterId, String serverId, String publicKey, Integer storage){
+    public ApiResponse<Volume> attachVolume(String datacenterId, String serverId, String publicKey, Integer storage) {
         Volume volume = new Volume();
         VolumeProperties volumeProperties = new VolumeProperties();
         volumeProperties.setName("Volume");
@@ -200,7 +200,7 @@ public class IonosCloudService {
         lan.setProperties(lanPropertiesPost);
 
         try {
-            ApiResponse<LanPost> response= lanApi.datacentersLansPostWithHttpInfo(dataCenterId, lan, true, 0, contractNumber);
+            ApiResponse<LanPost> response = lanApi.datacentersLansPostWithHttpInfo(dataCenterId, lan, true, 0, contractNumber);
             System.out.println(response.getData());
             return response;
         } catch (ApiException e) {

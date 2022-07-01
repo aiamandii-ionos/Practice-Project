@@ -19,8 +19,8 @@ public class ServerRepository implements PanacheRepositoryBase<Server, UUID> {
     @Inject
     SecurityIdentity securityIdentity;
 
-    public List<Server> getAll(){
-        if(securityIdentity.hasRole("admin"))
+    public List<Server> getAll() {
+        if (securityIdentity.hasRole("admin"))
             return findAll().stream().toList();
         else {
             return list("user_id", UUID.fromString(jwt.getSubject()));
