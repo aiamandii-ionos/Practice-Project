@@ -41,20 +41,13 @@ public class Request {
     @JoinColumn(name = "resource_id")
     private Server server;
 
-    public Request(UUID requestId, Server server, String properties) {
-        this.requestId = requestId;
-        this.server = server;
-        this.properties = properties;
-    }
-
-    public Request(RequestType createServer, RequestStatus toDo, String toString, String s, LocalDateTime now, UUID userId, Server server) {
+    public Request(RequestType createServer, RequestStatus toDo, String toString, String s, LocalDateTime now, UUID userId) {
         this.type = createServer;
         this.status = toDo;
         this.properties = toString;
         this.message = s;
         this.createdAt = now;
         this.userId = userId;
-        this.server = server;
     }
 
     public UUID getRequestId() {
@@ -134,9 +127,4 @@ public class Request {
 
     public Request() {
     }
-
-    public Request(UUID id) {
-        this.requestId = id;
-    }
-
 }

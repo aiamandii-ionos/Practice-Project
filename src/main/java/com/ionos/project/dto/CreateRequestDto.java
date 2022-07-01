@@ -2,6 +2,7 @@ package com.ionos.project.dto;
 
 import com.fasterxml.jackson.annotation.*;
 import com.ionos.project.model.enums.RequestType;
+import org.jose4j.json.internal.json_simple.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -12,6 +13,6 @@ public record CreateRequestDto(
                 property = "id")
         @JsonIdentityReference(alwaysAsId = true)
         ServerDto server,
-        String properties
+        JSONObject properties
 ) {
 }
