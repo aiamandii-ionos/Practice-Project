@@ -1,10 +1,12 @@
 package com.ionos.project.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.ionos.project.validator.RamConstraint;
 
 import java.util.UUID;
 import javax.validation.constraints.*;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record ServerDto(
         UUID id,
         UUID userId,
