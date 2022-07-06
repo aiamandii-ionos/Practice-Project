@@ -10,8 +10,9 @@ import org.mapstruct.*;
 @Mapper(componentModel = "cdi")
 public interface RequestMapper {
 
-    Request toEntity(RequestDto requestDto);
+    //Request toEntity(RequestDto requestDto);
 
+    @Mapping(target = "properties", expression = "java(deserialize(request.getProperties()))")
     RequestDto toDTO(Request request);
 
     GetAllRequestsDto toGetAllRequestsDto(Request request);

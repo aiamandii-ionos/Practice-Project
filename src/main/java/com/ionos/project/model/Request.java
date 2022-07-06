@@ -46,6 +46,7 @@ public class Request {
     private LocalDateTime createdAt;
 
     @Column(name = "user_id")
+    @NonNull
     private UUID userId;
 
     @ManyToOne

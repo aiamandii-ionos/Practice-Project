@@ -53,7 +53,7 @@ public class ServerService {
     @Transactional
     public Server save(Server server) {
         logger.info("save server");
-        server.setUserId(UUID.fromString(jwt.getSubject()));
+        //server.setUserId(UUID.fromString(jwt.getSubject()));
         saveIonosServer(server);
         repository.persist(server);
         return server;
@@ -71,7 +71,7 @@ public class ServerService {
         logger.info("create ip block for Ionos Cloud");
         ApiResponse<IpBlock> ipBlockApiResponse = ionosCloudService.createIpBlock();
         ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(ipBlockApiResponse.getHeaders()));
-        System.out.println(ipBlockApiResponse.getData());
+
         UUID ipBlockId = UUID.fromString(Objects.requireNonNull(ipBlockApiResponse.getData().getId()));
         server.setIpBlockIonosId(ipBlockId);
         server.setIp(ipBlockApiResponse.getData().getProperties().getIps().get(0));
