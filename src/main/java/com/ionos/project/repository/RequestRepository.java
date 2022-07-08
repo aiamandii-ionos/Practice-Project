@@ -19,11 +19,11 @@ public class RequestRepository implements PanacheRepositoryBase<Request, UUID> {
     @Inject
     SecurityIdentity securityIdentity;
 
-    public List<Request> getAll() {
+    public List<Request> getAll(UUID userId) {
         if (securityIdentity.hasRole("admin"))
             return findAll().stream().toList();
         else {
-            return list("user_id", UUID.fromString(jwt.getSubject()));
+            return list("user_id", userId);
         }
     }
 

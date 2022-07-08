@@ -4,6 +4,7 @@ import com.ionos.project.dto.*;
 import com.ionos.project.mapper.RequestMapper;
 import com.ionos.project.model.*;
 import com.ionos.project.service.RequestService;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.*;
 
@@ -21,9 +22,12 @@ public class RequestController {
     @Inject
     RequestMapper requestMapper;
 
+    @Inject
+    JsonWebToken jwt;
+
     @GET
     public Response getAll() {
-        List<GetAllRequestsDto> requestDtoList = requestService.findAll().stream().map(request -> requestMapper.toGetAllRequestsDto(request)).toList();
+        List<GetAllRequestsDto> requestDtoList = requestService.findAll(UUID.fromString(jwt.getSubject())).stream().map(request -> requestMapper.toGetAllRequestsDto(request)).toList();
         return Response.ok(requestDtoList).build();
     }
 

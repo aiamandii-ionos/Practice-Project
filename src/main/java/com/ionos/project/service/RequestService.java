@@ -2,7 +2,6 @@ package com.ionos.project.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ionos.project.dto.*;
 import com.ionos.project.exception.*;
 import com.ionos.project.model.*;
 import com.ionos.project.model.enums.*;
@@ -14,11 +13,20 @@ import org.jboss.logging.Logger;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
+//refactoring
+//mai pune loguri
+//face switch pt create
+// scoate user id din properties
+//fa o singura metoda de update
+// adauga for cu request in metoda
+// sorteaza get all dupa data
+// List<Request> requestList = findAll(lastRequest.getUserId()); in loc de asta gaseste dupa server
 @ApplicationScoped
 public class RequestService {
     @Inject
@@ -39,22 +47,26 @@ public class RequestService {
     @Inject
     private Logger logger;
 
-    public List<Request> findAll() {
+    public List<Request> findAll(UUID userId) {
         logger.info("find all requests");
-        return repository.getAll();
+        return repository.getAll(userId);
     }
 
     @Scheduled(every = "1s")
     public void scheduleRequests(){
+        ReentrantLock reentrantLock = new ReentrantLock();
+        reentrantLock.lock();
         Request lastRequest = repository.getLastRequest();
         if(lastRequest == null)
             return;
         lastRequest.setStatus(RequestStatus.IN_PROGRESS);
-        updateStatus(lastRequest.getRequestId(), lastRequest);
+        updateStatusRequest(lastRequest.getRequestId(), lastRequest);
+
+        reentrantLock.unlock();
 
         try {
             Server server = null;
-            if(!lastRequest.getProperties().equals(""))
+            if(!lastRequest.getProperties().isEmpty())
             {
                 server = new ObjectMapper().readValue(lastRequest.getProperties(), Server.class);
             }
@@ -64,26 +76,44 @@ public class RequestService {
                     lastRequest.setServer(createdServer);
                     lastRequest.setStatus(RequestStatus.DONE);
                     lastRequest.setMessage("Your request has been processed. The server has been successfully created!");
-                    updateStatus(lastRequest.getRequestId(), lastRequest);
+                    updateCreateRequest(lastRequest.getRequestId(), lastRequest);
                 }
                 case UPDATE_SERVER -> {
-                    Server updatedServer = serverService.update(server.getId(), server);
+                    Server updatedServer = serverService.update(lastRequest.getServer().getId(), server);
                     lastRequest.setServer(updatedServer);
                     lastRequest.setStatus(RequestStatus.DONE);
                     lastRequest.setMessage("Your request has been processed. The server has been successfully updated!");
-                    updateStatus(lastRequest.getRequestId(), lastRequest);
+                    updateCreateRequest(lastRequest.getRequestId(), lastRequest);
                 }
                 case DELETE_SERVER -> {
-                    serverService.delete(lastRequest.getServer().getId());
-                    lastRequest.setServer(server);
+                    String uuid = String.valueOf(lastRequest.getServer().getId());
+                    List<Request> requestList = findAll(lastRequest.getUserId());
+                    for(Request r: requestList)
+                    {
+                        if(r.getServer()!=null && Objects.equals(String.valueOf(r.getServer().getId()), uuid))
+                        {
+                            r.setServer(null);
+                            updateCreateRequest(r.getRequestId(), r);
+                        }
+                    }
+
+                    serverService.delete(UUID.fromString(uuid));
                     lastRequest.setStatus(RequestStatus.DONE);
                     lastRequest.setMessage("Your request has been processed. The server has been successfully deleted!");
-                    updateStatus(lastRequest.getRequestId(), lastRequest);
+                    updateStatusRequest(lastRequest.getRequestId(), lastRequest);
                 }
 
             }
-        }  catch (JsonProcessingException e) {
-            e.printStackTrace();
+        } catch (ApiException e){
+            lastRequest.setStatus(RequestStatus.FAILED);
+            lastRequest.setMessage(e.getErrorMessage());
+            updateStatusRequest(lastRequest.getRequestId(), lastRequest);
+        }
+        catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            lastRequest.setStatus(RequestStatus.FAILED);
+            lastRequest.setMessage(ErrorMessage.INTERNAL_SERVER_ERROR.getErrorMessage());
+            updateStatusRequest(lastRequest.getRequestId(), lastRequest);
         }
 
     }
@@ -113,7 +143,7 @@ public class RequestService {
         try {
             String properties = new ObjectMapper().writeValueAsString(server);
             Request createRequest = Request.builder().type(RequestType.UPDATE_SERVER)
-                    .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).userId(userId).build();
+                    .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToUpdate).userId(userId).build();
             repository.persist(createRequest);
             return createRequest;
         } catch (Exception e) {
@@ -128,10 +158,15 @@ public class RequestService {
         Server server = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
         if (!securityIdentity.hasRole("admin") && !server.getUserId().toString().equals(jwt.getSubject()))
             throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
-        Request createRequest = Request.builder().type(RequestType.DELETE_SERVER)
-                .message("").status(RequestStatus.TO_DO).properties("").createdAt(LocalDateTime.now()).userId(userId).build();
-        repository.persist(createRequest);
-        return createRequest;
+        try {
+            Request createRequest = Request.builder().type(RequestType.DELETE_SERVER)
+                    .message("").properties("{}").status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(server).userId(userId).build();
+            repository.persist(createRequest);
+            return createRequest;
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
+        }
     }
 
     public Request findById(UUID uuid) {
@@ -143,11 +178,28 @@ public class RequestService {
     }
 
     @Transactional
-    public Request updateStatus(UUID uuid, Request request) {
+    public Request updateCreateRequest(UUID uuid, Request request) {
         logger.info("update server by id");
         Request requestToUpdate = repository.findById(uuid);
         requestToUpdate.setStatus(request.getStatus());
+        requestToUpdate.setMessage(request.getMessage());
+        if(request.getServer() != null)
+            requestToUpdate.setServer(request.getServer());
+        else
+            requestToUpdate.setServer(null);
         repository.persist(requestToUpdate);
         return requestToUpdate;
     }
+
+    @Transactional
+    public Request updateStatusRequest(UUID uuid, Request request){
+        logger.info("update server by id");
+        Request requestToUpdate = repository.findById(uuid);
+        requestToUpdate.setStatus(request.getStatus());
+        requestToUpdate.setMessage(request.getMessage());
+        repository.persist(requestToUpdate);
+        return requestToUpdate;
+    }
+
+
 }

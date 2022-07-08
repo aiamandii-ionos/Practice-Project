@@ -11,7 +11,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -59,7 +60,7 @@ public class Server {
     @Column(length = 2048, name = "private_key")
     private String privateKey;
 
-    @OneToMany(mappedBy = "server", cascade = CascadeType.ALL, orphanRemoval = false)
+    @OneToMany(mappedBy = "server", orphanRemoval = false)
     @JsonIgnore
     private List<Request> requestList;
 }

@@ -10,9 +10,9 @@ import java.util.UUID;
 import javax.persistence.*;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Builder
-@RequiredArgsConstructor
 @AllArgsConstructor
 @NoArgsConstructor
 public class Request {
@@ -26,27 +26,21 @@ public class Request {
     private UUID requestId;
 
     @Enumerated(EnumType.STRING)
-    @NonNull
     private RequestType type;
 
     @Enumerated(EnumType.STRING)
-    @NonNull
     private RequestStatus status;
 
     @Column(name = "properties")
-    @NonNull
     private String properties;
 
     @Column(name = "message")
-    @NonNull
     private String message;
 
     @Column(name = "created_at")
-    @NonNull
     private LocalDateTime createdAt;
 
     @Column(name = "user_id")
-    @NonNull
     private UUID userId;
 
     @ManyToOne

@@ -53,7 +53,6 @@ public class ServerService {
     @Transactional
     public Server save(Server server) {
         logger.info("save server");
-        //server.setUserId(UUID.fromString(jwt.getSubject()));
         saveIonosServer(server);
         repository.persist(server);
         return server;
@@ -143,11 +142,8 @@ public class ServerService {
     public Server update(UUID uuid, Server server) {
         logger.info("update server by id");
         Server serverToUpdate = repository.findByIdOptional(uuid).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
-        if (!securityIdentity.hasRole("admin") && !serverToUpdate.getUserId().toString().equals(jwt.getSubject()))
-            throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
         updateIonosServer(serverToUpdate, server);
         serverToUpdate.setName(server.getName());
-        serverToUpdate.setUserId(UUID.fromString(jwt.getSubject()));
         serverToUpdate.setCores(server.getCores());
         serverToUpdate.setRam(server.getRam());
         serverToUpdate.setStorage(server.getStorage());
@@ -159,8 +155,6 @@ public class ServerService {
     public void delete(UUID uuid) {
         logger.info("delete server by id");
         Server server = repository.findByIdOptional(uuid).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid));
-        if (!securityIdentity.hasRole("admin") && !server.getUserId().toString().equals(jwt.getSubject()))
-            throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", uuid);
         deleteIonosServer(server);
         repository.deleteById(uuid);
     }
