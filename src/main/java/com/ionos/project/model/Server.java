@@ -7,7 +7,6 @@ import org.hibernate.annotations.*;
 import java.util.*;
 
 import javax.persistence.*;
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 
 @Entity

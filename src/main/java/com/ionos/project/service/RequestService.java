@@ -1,6 +1,5 @@
 package com.ionos.project.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ionos.project.exception.*;
 import com.ionos.project.model.*;
@@ -45,17 +44,17 @@ public class RequestService {
     }
 
     @Transactional
-    public Request createRequest(RequestType requestType, Server server, UUID serverId){
+    public Request createRequest(RequestType requestType, Server server, UUID serverId) {
 
         Request request = null;
         try {
-            switch (requestType){
+            switch (requestType) {
                 case CREATE_SERVER -> {
                     logger.info("create request for server create");
                     UUID userId = UUID.fromString(jwt.getSubject());
                     String properties = new ObjectMapper().writeValueAsString(server);
                     request = Request.builder().type(RequestType.CREATE_SERVER)
-                                .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).userId(userId).build();
+                            .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).userId(userId).build();
                     repository.persist(request);
                 }
                 case UPDATE_SERVER -> {
@@ -66,7 +65,7 @@ public class RequestService {
                         throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
                     String properties = new ObjectMapper().writeValueAsString(server);
                     request = Request.builder().type(RequestType.UPDATE_SERVER)
-                                .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToUpdate).userId(userId).build();
+                            .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToUpdate).userId(userId).build();
                     repository.persist(request);
                 }
                 case DELETE_SERVER -> {
@@ -76,7 +75,7 @@ public class RequestService {
                     if (!securityIdentity.hasRole("admin") && !serverToDelete.getUserId().toString().equals(jwt.getSubject()))
                         throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
                     request = Request.builder().type(RequestType.DELETE_SERVER)
-                                .message("").properties("{}").status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToDelete).userId(userId).build();
+                            .message("").properties("{}").status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToDelete).userId(userId).build();
                     repository.persist(request);
                 }
 
@@ -89,13 +88,13 @@ public class RequestService {
     }
 
     @Scheduled(every = "1s")
-    public void scheduleRequests(){
+    public void scheduleRequests() {
         logger.info("getting last request in scheduler");
         ReentrantLock reentrantLock = new ReentrantLock();
         reentrantLock.lock();
         Request lastRequest = repository.getLastRequest();
 
-        if(lastRequest == null)
+        if (lastRequest == null)
             return;
         lastRequest.setStatus(RequestStatus.IN_PROGRESS);
         updateStatusRequest(lastRequest.getRequestId(), lastRequest);
@@ -105,11 +104,10 @@ public class RequestService {
         try {
             logger.info("getting server from request properties");
             Server server = null;
-            if(!lastRequest.getProperties().isEmpty())
-            {
+            if (!lastRequest.getProperties().isEmpty()) {
                 server = new ObjectMapper().readValue(lastRequest.getProperties(), Server.class);
             }
-            switch (lastRequest.getType()){
+            switch (lastRequest.getType()) {
                 case CREATE_SERVER -> {
                     logger.info("create server and update request status");
                     Server createdServer = serverService.save(server, lastRequest.getUserId());
@@ -139,13 +137,12 @@ public class RequestService {
                 }
 
             }
-        } catch (ApiException e){
+        } catch (ApiException e) {
             logger.error(e.getErrorMessage(), e);
             lastRequest.setStatus(RequestStatus.FAILED);
             lastRequest.setMessage(e.getErrorMessage());
             updateStatusRequest(lastRequest.getRequestId(), lastRequest);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error(e.getMessage(), e);
             lastRequest.setStatus(RequestStatus.FAILED);
             lastRequest.setMessage(ErrorMessage.INTERNAL_SERVER_ERROR.getErrorMessage());
@@ -168,17 +165,16 @@ public class RequestService {
         Request requestToUpdate = repository.findById(uuid);
         requestToUpdate.setStatus(request.getStatus());
         requestToUpdate.setMessage(request.getMessage());
-        if(request.getServer() != null)
+        if (request.getServer() != null)
             requestToUpdate.setServer(request.getServer());
         else
             requestToUpdate.setServer(null);
         repository.persist(requestToUpdate);
     }
 
-    public void updateRequestServerAfterDelete(UUID serverId){
+    public void updateRequestServerAfterDelete(UUID serverId) {
         List<Request> requestList = repository.findRequestsByServerId(serverId);
-        for(Request r: requestList)
-        {
+        for (Request r : requestList) {
             r.setServer(null);
             updateStatusRequest(r.getRequestId(), r);
         }
