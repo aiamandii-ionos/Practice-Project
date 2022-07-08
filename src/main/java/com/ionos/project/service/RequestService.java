@@ -20,7 +20,6 @@ import javax.inject.Inject;
 import javax.transaction.Transactional;
 
 //refactoring
-//face switch pt create
 // sorteaza get all dupa data
 // find all requests change uuid id parameter
 @ApplicationScoped
@@ -46,6 +45,50 @@ public class RequestService {
     public List<Request> findAll(UUID userId) {
         logger.info("find all requests");
         return repository.getAll(userId);
+    }
+
+    @Transactional
+    public Request createRequest(RequestType requestType, Server server, UUID serverId){
+
+        Request request = null;
+        try {
+            switch (requestType){
+                case CREATE_SERVER -> {
+                    logger.info("create request for server create");
+                    UUID userId = UUID.fromString(jwt.getSubject());
+                    String properties = new ObjectMapper().writeValueAsString(server);
+                    request = Request.builder().type(RequestType.CREATE_SERVER)
+                                .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).userId(userId).build();
+                    repository.persist(request);
+                }
+                case UPDATE_SERVER -> {
+                    logger.info("create request for server update");
+                    UUID userId = UUID.fromString(jwt.getSubject());
+                    Server serverToUpdate = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
+                    if (!securityIdentity.hasRole("admin") && !serverToUpdate.getUserId().toString().equals(jwt.getSubject()))
+                        throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
+                    String properties = new ObjectMapper().writeValueAsString(server);
+                    request = Request.builder().type(RequestType.UPDATE_SERVER)
+                                .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToUpdate).userId(userId).build();
+                    repository.persist(request);
+                }
+                case DELETE_SERVER -> {
+                    logger.info("create request for server delete");
+                    UUID userId = UUID.fromString(jwt.getSubject());
+                    Server serverToDelete = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
+                    if (!securityIdentity.hasRole("admin") && !serverToDelete.getUserId().toString().equals(jwt.getSubject()))
+                        throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
+                    request = Request.builder().type(RequestType.DELETE_SERVER)
+                                .message("").properties("{}").status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToDelete).userId(userId).build();
+                    repository.persist(request);
+                }
+
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
+        }
+        return request;
     }
 
     @Scheduled(every = "1s")

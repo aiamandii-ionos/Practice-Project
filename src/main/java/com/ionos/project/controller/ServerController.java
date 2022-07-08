@@ -4,6 +4,7 @@ import com.ionos.project.dto.ServerDto;
 import com.ionos.project.mapper.*;
 import com.ionos.project.model.Request;
 import com.ionos.project.model.Server;
+import com.ionos.project.model.enums.RequestType;
 import com.ionos.project.service.*;
 
 import java.util.*;
@@ -47,29 +48,23 @@ public class ServerController {
     @Path("/create")
     @RolesAllowed("user")
     public Response createServer(@Valid ServerDto serverDto) {
-        Request request = requestService.createRequestForServerCreate(mapper.toEntity(serverDto));
+        Request request = requestService.createRequest(RequestType.CREATE_SERVER, mapper.toEntity(serverDto), serverDto.id());
         return Response.status(Response.Status.ACCEPTED).entity(requestMapper.toCreateRequestDto(request)).build();
-        //final Server saved = service.save(mapper.toEntity(serverDto));
-        //return Response.status(Response.Status.CREATED).entity(mapper.toDTO(saved)).build();
     }
 
     @PUT
     @Path("/{serverId}")
     @RolesAllowed({"user", "admin"})
     public Response updateById(@PathParam("serverId") UUID serverId, @Valid ServerDto serverDto) {
-        Request request = requestService.createRequestForServerUpdate(mapper.toEntity(serverDto), serverId);
+        Request request = requestService.createRequest(RequestType.UPDATE_SERVER, mapper.toEntity(serverDto), serverId);
         return Response.status(Response.Status.ACCEPTED).entity(requestMapper.toCreateRequestDto(request)).build();
-//        Server saved = service.update(serverId, mapper.toEntity(serverDto));
-//        return Response.ok(mapper.toDTO(saved)).build();
     }
 
     @DELETE
     @Path("/{serverId}")
     @RolesAllowed({"user", "admin"})
     public Response deleteById(@PathParam("serverId") UUID serverId) {
-        Request request = requestService.createRequestForServerDelete(serverId);
+        Request request = requestService.createRequest(RequestType.DELETE_SERVER, null, serverId);
         return Response.status(Response.Status.ACCEPTED).entity(requestMapper.toDeleteRequestDto(request)).build();
-//        service.delete(serverId);
-//        return Response.status(204).build();
     }
 }
