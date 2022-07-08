@@ -30,4 +30,8 @@ public class RequestRepository implements PanacheRepositoryBase<Request, UUID> {
     public Request getLastRequest(){
         return find("status = ?1 order by created_at", RequestStatus.TO_DO).stream().findFirst().orElse(null);
     }
+
+    public List<Request> findRequestsByServerId(UUID serverId) {
+        return list("resource_id", serverId);
+    }
 }

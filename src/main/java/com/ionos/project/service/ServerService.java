@@ -37,6 +37,7 @@ public class ServerService {
     @Inject
     JsonWebToken jwt;
 
+
     public List<Server> findAll() {
         logger.info("find all servers");
         return repository.getAll();
@@ -51,8 +52,9 @@ public class ServerService {
     }
 
     @Transactional
-    public Server save(Server server) {
+    public Server save(Server server, UUID userId) {
         logger.info("save server");
+        server.setUserId(userId);
         saveIonosServer(server);
         repository.persist(server);
         return server;
