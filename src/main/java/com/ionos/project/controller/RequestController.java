@@ -27,7 +27,7 @@ public class RequestController {
 
     @GET
     public Response getAll() {
-        List<GetAllRequestsDto> requestDtoList = requestService.findAll(UUID.fromString(jwt.getSubject())).stream().map(request -> requestMapper.toGetAllRequestsDto(request)).toList();
+        List<GetAllRequestsDto> requestDtoList = requestService.findAll().stream().map(request -> requestMapper.toGetAllRequestsDto(request)).toList();
         return Response.ok(requestDtoList).build();
     }
 

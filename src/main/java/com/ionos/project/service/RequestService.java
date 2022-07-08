@@ -19,9 +19,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 
-//refactoring
-// sorteaza get all dupa data
-// find all requests change uuid id parameter
 @ApplicationScoped
 public class RequestService {
     @Inject
@@ -42,9 +39,9 @@ public class RequestService {
     @Inject
     private Logger logger;
 
-    public List<Request> findAll(UUID userId) {
+    public List<Request> findAll() {
         logger.info("find all requests");
-        return repository.getAll(userId);
+        return repository.getAll();
     }
 
     @Transactional
@@ -155,59 +152,6 @@ public class RequestService {
             updateStatusRequest(lastRequest.getRequestId(), lastRequest);
         }
 
-    }
-
-    @Transactional
-    public Request createRequestForServerCreate(Server server) {
-        logger.info("create request for server create");
-        UUID userId = UUID.fromString(jwt.getSubject());
-        try {
-            String properties = new ObjectMapper().writeValueAsString(server);
-            Request createRequest = Request.builder().type(RequestType.CREATE_SERVER)
-                    .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).userId(userId).build();
-            repository.persist(createRequest);
-            return createRequest;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @Transactional
-    public Request createRequestForServerUpdate(Server server, UUID serverId) {
-        logger.info("create request for server update");
-        UUID userId = UUID.fromString(jwt.getSubject());
-        Server serverToUpdate = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
-        if (!securityIdentity.hasRole("admin") && !serverToUpdate.getUserId().toString().equals(jwt.getSubject()))
-            throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
-        try {
-            String properties = new ObjectMapper().writeValueAsString(server);
-            Request createRequest = Request.builder().type(RequestType.UPDATE_SERVER)
-                    .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToUpdate).userId(userId).build();
-            repository.persist(createRequest);
-            return createRequest;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @Transactional
-    public Request createRequestForServerDelete(UUID serverId) {
-        logger.info("create request for server delete");
-        UUID userId = UUID.fromString(jwt.getSubject());
-        Server server = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
-        if (!securityIdentity.hasRole("admin") && !server.getUserId().toString().equals(jwt.getSubject()))
-            throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
-        try {
-            Request createRequest = Request.builder().type(RequestType.DELETE_SERVER)
-                    .message("").properties("{}").status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(server).userId(userId).build();
-            repository.persist(createRequest);
-            return createRequest;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
-        }
     }
 
     public Request findById(UUID uuid) {

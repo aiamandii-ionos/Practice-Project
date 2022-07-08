@@ -7,6 +7,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -19,11 +20,11 @@ public class RequestRepository implements PanacheRepositoryBase<Request, UUID> {
     @Inject
     SecurityIdentity securityIdentity;
 
-    public List<Request> getAll(UUID userId) {
+    public List<Request> getAll() {
         if (securityIdentity.hasRole("admin"))
-            return findAll().stream().toList();
+            return find("order by created_at desc").stream().toList();
         else {
-            return list("user_id", userId);
+            return find("user_id=?1 order by created_at desc", UUID.fromString(jwt.getSubject())).stream().collect(Collectors.toList());
         }
     }
 
