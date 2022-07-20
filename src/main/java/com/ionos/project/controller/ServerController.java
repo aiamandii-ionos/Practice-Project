@@ -45,7 +45,6 @@ public class ServerController {
     }
 
     @POST
-    @Path("/create")
     @RolesAllowed("user")
     public Response createServer(@Valid ServerDto serverDto) {
         Request request = requestService.createRequest(RequestType.CREATE_SERVER, mapper.toEntity(serverDto), serverDto.id());
