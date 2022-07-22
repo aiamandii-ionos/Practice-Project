@@ -10,7 +10,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -37,6 +37,8 @@ public class RequestService {
 
     @Inject
     private Logger logger;
+
+    private final ReentrantLock reentrantLock = new ReentrantLock();
 
     public List<Request> findAll() {
         logger.info("find all requests");
@@ -80,6 +82,8 @@ public class RequestService {
                 }
 
             }
+        } catch (ApiException e) {
+            throw e;
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
@@ -90,7 +94,6 @@ public class RequestService {
     @Scheduled(every = "1s")
     public void scheduleRequests() {
         logger.info("getting last request in scheduler");
-        ReentrantLock reentrantLock = new ReentrantLock();
         reentrantLock.lock();
         Request lastRequest = repository.getLastRequest();
 
