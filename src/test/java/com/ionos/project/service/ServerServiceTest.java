@@ -52,7 +52,7 @@ public class ServerServiceTest {
     @Mock
     SecurityIdentity securityIdentity;
 
-    Map<String, List<String>> generateHeaders(){
+    Map<String, List<String>> generateHeaders() {
         Pattern pattern = Pattern.compile("([-\\w]+)=\\[(.*?)]");
         Matcher matcher = pattern.matcher("{access-control-allow-headers=[*], access-control-allow-methods=[*], access-control-allow-origin=[*], access-control-expose-headers=[*], content-length=[671], content-type=[application/json], date=[Mon, 20 Jun 2022 12:54:03 GMT], location=[https://api.ionos.com/cloudapi/v5/requests/6eaa56eb-328b-4c12-a891-b9c177a39fba/status], server=[nginx], x-frame-options=[SAMEORIGIN], x-ratelimit-burst=[50], x-ratelimit-limit=[120], x-ratelimit-remaining=[49]}");
 
@@ -287,7 +287,7 @@ public class ServerServiceTest {
 
         Mockito.when(repository.findByIdOptional(uuid)).thenReturn(Optional.ofNullable(oldServer));
         doNothing().when(repository).persist(any(Server.class));
-        Mockito.when(ionosCloudService.updateServer(oldServer.getDataCenterId().toString(),oldServer.getServerIonosId().toString(), newServer)).thenReturn(apiResponse);
+        Mockito.when(ionosCloudService.updateServer(oldServer.getDataCenterId().toString(), oldServer.getServerIonosId().toString(), newServer)).thenReturn(apiResponse);
 
         Server updated = serverService.update(uuid, newServer);
         assertEquals(updated.getName(), newServer.getName());

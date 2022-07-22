@@ -54,7 +54,7 @@ public class RequestServiceTest {
 
         Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(uuid));
 
-        String properties =  "{\"name\":\"s\",\"cores\":2,\"ram\":1024,\"storage\":3}";
+        String properties = "{\"name\":\"s\",\"cores\":2,\"ram\":1024,\"storage\":3}";
 
 
         doNothing().when(requestRepository).persist(any(Request.class));
@@ -67,7 +67,7 @@ public class RequestServiceTest {
     }
 
     @Test
-    void createUpdateRequest_Success(){
+    void createUpdateRequest_Success() {
         UUID uuid = UUID.randomUUID();
 
         String id = "a848a45e-d065-11ec-a62f-2d718d2fcfae";
@@ -86,7 +86,7 @@ public class RequestServiceTest {
                 .storage(30)
                 .name("server1").build();
 
-        String properties =  "{\"name\":\"s\",\"cores\":2,\"ram\":1024,\"storage\":3}";
+        String properties = "{\"name\":\"s\",\"cores\":2,\"ram\":1024,\"storage\":3}";
 
         Mockito.when(securityIdentity.hasRole("admin")).thenReturn(false);
         Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(uuid));
@@ -103,7 +103,7 @@ public class RequestServiceTest {
     }
 
     @Test
-    void createDeleteRequest_Success(){
+    void createDeleteRequest_Success() {
         UUID uuid = UUID.randomUUID();
 
         String id = "a848a45e-d065-11ec-a62f-2d718d2fcfae";
