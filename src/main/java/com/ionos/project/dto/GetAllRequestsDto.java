@@ -8,6 +8,7 @@ import java.util.UUID;
 public record GetAllRequestsDto(
         UUID requestId,
         RequestType type,
+        RequestStatus status,
         LocalDateTime createdAt
 ) {
 }
