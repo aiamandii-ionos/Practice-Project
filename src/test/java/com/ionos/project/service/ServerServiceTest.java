@@ -1,8 +1,7 @@
 package com.ionos.project.service;
 
-import com.ionos.project.model.*;
 import com.ionos.project.model.Server;
-import com.ionos.project.repository.ServerRepository;
+import com.ionos.project.repository.*;
 import com.ionoscloud.ApiResponse;
 import com.ionoscloud.api.IpBlocksApi;
 import com.ionoscloud.model.*;
@@ -28,6 +27,12 @@ import static org.mockito.Mockito.*;
 public class ServerServiceTest {
     @InjectMocks
     ServerService serverService;
+
+    @InjectMocks
+    RequestService requestService;
+
+    @Mock
+    RequestRepository requestRepository;
 
     @Mock
     ServerRepository repository;
@@ -67,8 +72,6 @@ public class ServerServiceTest {
 
         UUID datacenterId = UUID.fromString("b8ce4ef6-8bd0-462a-88f8-100d26b9126d");
 
-        Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(uuid));
-
         Server toBeSavedServer = Server.builder()
                 .userId(uuid)
                 .cores(2)
@@ -88,10 +91,7 @@ public class ServerServiceTest {
         LanPost lanPost = mock(LanPost.class);
         IpBlockProperties ipBlockProperties = mock(IpBlockProperties.class);
         com.ionoscloud.model.Server server = mock(com.ionoscloud.model.Server.class);
-        ServerProperties serverProperties = mock(ServerProperties.class);
         Volume volume = mock(Volume.class);
-        VolumeProperties volumeProperties = mock(VolumeProperties.class);
-        SshKey sshKey = mock(SshKey.class);
 
         String id = "5efc1b40-d8d5-4e6f-913e-990016685c4a";
         Mockito.when(ipBlock.getId()).thenReturn(id);
@@ -117,7 +117,8 @@ public class ServerServiceTest {
         Integer toBeSaved = toBeSavedServer.getStorage();
         Mockito.when(ionosCloudService.attachVolume(eq(datacenter), eq(serv), anyString(), eq(toBeSaved))).thenReturn(volumeApiResponse);
 
-        Server result = serverService.save(toBeSavedServer);
+
+        Server result = serverService.save(toBeSavedServer, uuid);
         assertThat(result).isEqualTo(toBeSavedServer);
     }
 
@@ -133,11 +134,8 @@ public class ServerServiceTest {
                 .storage(30)
                 .name("server1").build();
 
-        Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(uuid));
-
-        //doThrow(new PersistenceException()).when(repository).persist(toBeSavedServer);
         Exception exception = assertThrows(RuntimeException.class, () -> {
-            serverService.save(toBeSavedServer);
+            serverService.save(toBeSavedServer, uuid);
         });
         assertNotNull(exception);
     }
@@ -151,9 +149,6 @@ public class ServerServiceTest {
                 .ram(200)
                 .storage(30)
                 .name("server1").build();
-
-//        PanacheQuery query = Mockito.mock(PanacheQuery.class);
-//        Mockito.when(query.list()).thenReturn(List.of(toBeSavedServer));
 
         Mockito.when(repository.getAll())
                 .thenReturn(List.of(toBeSavedServer));
@@ -240,8 +235,6 @@ public class ServerServiceTest {
 
         ApiResponse<Object> apiResponse = new ApiResponse<>(202, map);
 
-        Mockito.when(securityIdentity.hasRole("admin")).thenReturn(false);
-        Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(userUuid));
         Mockito.when(repository.findByIdOptional(uuid)).thenReturn(Optional.ofNullable(server));
         Mockito.when(repository.deleteById(uuid)).thenReturn(true);
         Mockito.when(ionosCloudService.deleteServer(server.getDataCenterId().toString(), server.getServerIonosId().toString())).thenReturn(apiResponse);
@@ -292,15 +285,15 @@ public class ServerServiceTest {
 
         ApiResponse<com.ionoscloud.model.Server> apiResponse = new ApiResponse<>(202, map);
 
-        Mockito.when(securityIdentity.hasRole("admin")).thenReturn(false);
-        Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(userUuid));
-
         Mockito.when(repository.findByIdOptional(uuid)).thenReturn(Optional.ofNullable(oldServer));
-        doNothing().when(repository).persist(newServer);
+        doNothing().when(repository).persist(any(Server.class));
         Mockito.when(ionosCloudService.updateServer(oldServer.getDataCenterId().toString(),oldServer.getServerIonosId().toString(), newServer)).thenReturn(apiResponse);
 
         Server updated = serverService.update(uuid, newServer);
-        assertThat(updated).isEqualTo(newServer);
+        assertEquals(updated.getName(), newServer.getName());
+        assertEquals(updated.getCores(), newServer.getCores());
+        assertEquals(updated.getStorage(), newServer.getStorage());
+        assertEquals(updated.getRam(), newServer.getRam());
     }
 
     @Test
