@@ -1,5 +1,6 @@
 package com.ionos.project.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ionos.project.exception.*;
 import com.ionos.project.model.*;
@@ -46,7 +47,7 @@ public class RequestService {
     }
 
     @Transactional
-    public Request createRequest(RequestType requestType, Server server, UUID serverId) {
+    public Request createRequest(RequestType requestType, Server server, UUID serverId) throws JsonProcessingException {
 
         Request request = null;
         try {
@@ -60,29 +61,29 @@ public class RequestService {
                 }
                 case UPDATE_SERVER -> {
                     logger.info("create request for server update");
-                    Server serverToUpdate = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
-                    if (!securityIdentity.hasRole("admin") && !serverToUpdate.getUserId().toString().equals(jwt.getSubject()))
-                        throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
+                    Server serverToUpdate = checkIfServerExistsInDatabase(serverId);
                     request = Request.builder().type(RequestType.UPDATE_SERVER).message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToUpdate).userId(userId).build();
                     repository.persist(request);
                 }
                 case DELETE_SERVER -> {
                     logger.info("create request for server delete");
-                    Server serverToDelete = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
-                    if (!securityIdentity.hasRole("admin") && !serverToDelete.getUserId().toString().equals(jwt.getSubject()))
-                        throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
+                    Server serverToDelete = checkIfServerExistsInDatabase(serverId);
                     request = Request.builder().type(RequestType.DELETE_SERVER).message("").properties("{}").status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToDelete).userId(userId).build();
                     repository.persist(request);
                 }
 
             }
-        } catch (ApiException e) {
-            throw e;
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-            throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
+        } finally {
+
         }
         return request;
+    }
+
+    private Server checkIfServerExistsInDatabase(UUID serverId) {
+        Server server = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
+        if (!securityIdentity.hasRole("admin") && !server.getUserId().toString().equals(jwt.getSubject()))
+            throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
+        return server;
     }
 
     @Scheduled(every = "1s")
@@ -100,6 +101,7 @@ public class RequestService {
         try {
             logger.info("getting server from request properties");
             Server server = null;
+            String request = "";
             if (!lastRequest.getProperties().isEmpty()) {
                 server = new ObjectMapper().readValue(lastRequest.getProperties(), Server.class);
             }
@@ -107,16 +109,19 @@ public class RequestService {
                 case CREATE_SERVER -> {
                     logger.info("create server and update request status");
                     Server createdServer = serverService.create(server, lastRequest.getUserId());
+                    request = "created";
                     lastRequest.setServer(createdServer);
                 }
                 case UPDATE_SERVER -> {
                     logger.info("update server and update request status");
                     Server updatedServer = serverService.update(lastRequest.getServer().getId(), server);
+                    request = "updated";
                     lastRequest.setServer(updatedServer);
                 }
                 case DELETE_SERVER -> {
                     logger.info("delete server and update request status");
                     UUID uuid = lastRequest.getServer().getId();
+                    request = "deleted";
 
                     updateRequestServerAfterDelete(uuid);
 
@@ -124,7 +129,7 @@ public class RequestService {
                 }
             }
             lastRequest.setStatus(RequestStatus.DONE);
-            lastRequest.setMessage("Your request has been processed. The server has been successfully deleted!");
+            lastRequest.setMessage("Your request has been processed. The server has been successfully " + request);
             updateStatusRequest(lastRequest.getRequestId(), lastRequest);
         } catch (ApiException e) {
             logger.error(e.getErrorMessage(), e);
