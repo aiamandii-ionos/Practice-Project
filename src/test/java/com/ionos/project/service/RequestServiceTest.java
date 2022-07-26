@@ -71,7 +71,7 @@ public class RequestServiceTest {
     }
 
     @Test
-    void updateServerRequest_Failure() {
+    void updateServerRequest_ThrowsNotFoundException() {
         UUID uuid = UUID.randomUUID();
 
         Server toBeSavedServer = Server.builder()
@@ -89,7 +89,7 @@ public class RequestServiceTest {
     }
 
     @Test
-    void deleteServerRequest_Failure() {
+    void deleteServerRequest_ThrowsNotFoundException() {
         UUID uuid = UUID.randomUUID();
 
         Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(uuid));
@@ -252,7 +252,7 @@ public class RequestServiceTest {
     }
 
     @Test
-    void getAllRequests() {
+    void getAllRequests_Success() {
         UUID uuid = UUID.randomUUID();
         Server server = Server.builder()
                 .id(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))
@@ -301,7 +301,7 @@ public class RequestServiceTest {
     }
 
     @Test
-    void getRequestById_Failure() {
+    void getRequestById_ThrowsNotFoundException() {
         UUID uuid = UUID.randomUUID();
 
         Mockito.when(requestRepository.findByIdOptional(any(UUID.class))).thenThrow(new NotFoundException());
@@ -313,7 +313,7 @@ public class RequestServiceTest {
     }
 
     @Test
-    void getRequestById_FailurePermission() {
+    void getRequestById_PermissionDenied() {
         UUID uuid = UUID.randomUUID();
         Server server = Server.builder()
                 .id(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))

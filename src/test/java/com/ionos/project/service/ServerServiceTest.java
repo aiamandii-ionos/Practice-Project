@@ -67,7 +67,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void saveServer_Success() {
+    void createServer_Success() {
         UUID uuid = UUID.randomUUID();
 
         UUID datacenterId = UUID.fromString("b8ce4ef6-8bd0-462a-88f8-100d26b9126d");
@@ -124,7 +124,7 @@ public class ServerServiceTest {
 
 
     @Test
-    void saveServer_Failure() {
+    void createServer_RamIsNotMultipleOf1024_ThrowsRunTimeException() {
         UUID uuid = UUID.randomUUID();
 
         Server toBeSavedServer = Server.builder()
@@ -141,7 +141,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void getAllServers() {
+    void getAllServers_Success() {
         UUID uuid = UUID.randomUUID();
         Server toBeSavedServer = Server.builder()
                 .userId(uuid)
@@ -181,7 +181,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void getServerById_Failure() {
+    void getServerById_ThrowsNotFoundException() {
         UUID uuid = UUID.randomUUID();
 
         Mockito.when(repository.findByIdOptional(any(UUID.class))).thenThrow(new NotFoundException());
@@ -193,7 +193,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void getServerById_FailurePermission() {
+    void getServerById_PermissionDenied() {
         UUID uuid = UUID.randomUUID();
         Server server = Server.builder()
                 .id(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))
@@ -244,7 +244,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void deleteServer_Failure() {
+    void deleteServer_ThrowsNotFoundException() {
         UUID uuid = UUID.randomUUID();
 
         Mockito.when(repository.findByIdOptional(uuid)).thenThrow(new NotFoundException());
@@ -297,7 +297,7 @@ public class ServerServiceTest {
     }
 
     @Test
-    void updateServer_Failure() {
+    void updateServer_ThrowsNotFoundException() {
         UUID uuid = UUID.randomUUID();
         Server newServer = Server.builder()
                 .id(uuid)
