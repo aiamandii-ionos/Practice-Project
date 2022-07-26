@@ -118,7 +118,7 @@ public class ServerServiceTest {
         Mockito.when(ionosCloudService.attachVolume(eq(datacenter), eq(serv), anyString(), eq(toBeSaved))).thenReturn(volumeApiResponse);
 
 
-        Server result = serverService.save(toBeSavedServer, uuid);
+        Server result = serverService.create(toBeSavedServer, uuid);
         assertThat(result).isEqualTo(toBeSavedServer);
     }
 
@@ -135,7 +135,7 @@ public class ServerServiceTest {
                 .name("server1").build();
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
-            serverService.save(toBeSavedServer, uuid);
+            serverService.create(toBeSavedServer, uuid);
         });
         assertNotNull(exception);
     }

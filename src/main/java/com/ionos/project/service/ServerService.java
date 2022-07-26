@@ -52,15 +52,15 @@ public class ServerService {
     }
 
     @Transactional
-    public Server save(Server server, UUID userId) {
+    public Server create(Server server, UUID userId) {
         logger.info("save server");
         server.setUserId(userId);
-        saveIonosServer(server);
+        createIonosServer(server);
         repository.persist(server);
         return server;
     }
 
-    public void saveIonosServer(Server server) {
+    public void createIonosServer(Server server) {
         logger.info("Set datacenter id for server");
         UUID datacenterId = UUID.fromString("b8ce4ef6-8bd0-462a-88f8-100d26b9126d");
         server.setDataCenterId(datacenterId);
@@ -135,8 +135,7 @@ public class ServerService {
 
     public void updateIonosServer(Server serverToUpdate, Server newServer) {
         logger.info("update server for Ionos Cloud");
-        ApiResponse<com.ionoscloud.model.Server> updateServerApiResponse = ionosCloudService.updateServer
-                (serverToUpdate.getDataCenterId().toString(), serverToUpdate.getServerIonosId().toString(), newServer);
+        ApiResponse<com.ionoscloud.model.Server> updateServerApiResponse = ionosCloudService.updateServer(serverToUpdate.getDataCenterId().toString(), serverToUpdate.getServerIonosId().toString(), newServer);
         ionosCloudService.checkRequestStatusIsDone(ionosCloudService.getRequestId(updateServerApiResponse.getHeaders()));
     }
 

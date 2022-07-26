@@ -182,7 +182,7 @@ public class RequestServiceTest {
         Mockito.when(requestRepository.getLastRequest()).thenReturn(request);
 
         Mockito.when(requestRepository.findById(uuid)).thenReturn(request);
-        Mockito.when(serverService.save(any(Server.class), any())).thenReturn(server);
+        Mockito.when(serverService.create(any(Server.class), any())).thenReturn(server);
 
         doNothing().when(requestRepository).persist(request);
         requestService.scheduleRequests();
