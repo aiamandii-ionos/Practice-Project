@@ -5,6 +5,7 @@ import org.jose4j.json.internal.json_simple.JSONObject;
 
 import java.util.UUID;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record CreateRequestDto(
         UUID requestId,
         @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,

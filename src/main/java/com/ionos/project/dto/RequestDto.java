@@ -7,6 +7,7 @@ import org.jose4j.json.internal.json_simple.JSONObject;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record RequestDto(
         UUID requestId,
         @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class,
