@@ -1,176 +1,161 @@
 package com.ionos.project.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ionos.project.dto.ServerDto;
+import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
-import com.ionos.project.model.Server;
+import io.quarkus.test.security.TestSecurity;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
 import static io.restassured.RestAssured.*;
-import static org.assertj.core.api.Assertions.assertThat;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @QuarkusTest
+@TestHTTPEndpoint(ServerController.class)
+@TestSecurity(authorizationEnabled = false)
 class ServerControllerTest {
 
     @Test
-    void getAllServers_Success(){
-        given().when().get("/api/servers")
-                .then()
-                .statusCode(200);
-    }
-
-    @Test
-    void getServerById_Success(){
-        Server server = Server.builder()
-                .cores(2)
-                .ram(200)
-                .storage(30)
-                .name("server1").build();
-
-        Server saved = given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(server)
-                .post("/api/servers")
-                .then()
-                .statusCode(201)
-                .extract().as(Server.class);
-
-        Server got = given()
-                .pathParam("serverId", saved.getId())
-                .when()
-                .get("/api/servers/{serverId}")
-                .then()
-                .statusCode(200)
-                .extract().as(Server.class);
-
-        assertThat(saved).isEqualTo(got);
-    }
-
-    @Test
-    void getServerById_Failure(){
-        UUID uuid = UUID.randomUUID();
-        given()
-                .when()
-                .pathParam("serverId", uuid)
-                .get("/api/servers/{serverId}")
-                .then()
-                .statusCode(404);
-    }
-
-    @Test
-    void createServer_Success(){
-        Server server = Server.builder()
-                .cores(2)
-                .ram(200)
-                .storage(30)
-                .name("server1").build();
-
-        Server saved = given()
-                .contentType(ContentType.JSON)
-                .body(server)
-                .when()
-                .post("/api/servers")
-                .then()
-                .statusCode(201)
-                .extract().as(Server.class);
-        assertThat(saved.getId()).isNotNull();
-    }
-
-    @Test
-    void updateServer_Success(){
-        Server server = Server.builder()
-                .cores(2)
-                .ram(200)
-                .storage(30)
-                .name("server1").build();
-        Server saved = given()
-                .contentType(ContentType.JSON)
-                .body(server)
-                .when()
-                .post("/api/servers")
-                .then()
-                .statusCode(201)
-                .extract().as(Server.class);
-
-        saved.setName("server2");
-
-        Server updated = given()
-                .contentType(ContentType.JSON)
-                .body(saved)
-                .pathParam("serverId", saved.getId())
-                .when()
-                .put("/api/servers/{serverId}")
-                .then()
-                .statusCode(200)
-                .extract().as(Server.class);
-
-        assertThat(updated.getName()).isEqualTo("server2");
-    }
-
-    @Test
-    void updateServer_Failure(){
-        UUID uuid = UUID.randomUUID();
-        Server server = Server.builder()
-                .cores(2)
-                .ram(200)
-                .storage(30)
-                .name("server1").build();
-        Server saved = given()
-                .contentType(ContentType.JSON)
-                .body(server)
-                .when()
-                .post("/api/servers")
-                .then()
-                .statusCode(201)
-                .extract().as(Server.class);
-
-        saved.setName("server2");
+    void createServer_RamIsNotMultipleOf1024_Returns422() throws JsonProcessingException {
+        ServerDto toBeSavedServer = new ServerDto(null, null, null, null, "server1", 2, 200, 30);
 
         given()
-                .contentType(ContentType.JSON)
-                .body(saved)
+                .contentType(APPLICATION_JSON)
+                .body(new ObjectMapper().writeValueAsString(toBeSavedServer))
+                .when()
+                .post()
+                .then()
+                .statusCode(422);
+    }
+
+    @Test
+    void createServer_CoreIsZero_Returns422() throws JsonProcessingException {
+        ServerDto toBeSavedServer = new ServerDto(null, null, null, null, "server1", 0, 200, 30);
+
+        given()
+                .contentType(APPLICATION_JSON)
+                .body(new ObjectMapper().writeValueAsString(toBeSavedServer))
+                .when()
+                .post()
+                .then()
+                .statusCode(422);
+    }
+
+    @Test
+    void createServer_NameIsBlank_Returns422() throws JsonProcessingException {
+        ServerDto toBeSavedServer = new ServerDto(null, null, null, null, " ", 0, 200, 30);
+
+        given()
+                .contentType(APPLICATION_JSON)
+                .body(new ObjectMapper().writeValueAsString(toBeSavedServer))
+                .when()
+                .post()
+                .then()
+                .statusCode(422);
+    }
+
+    @Test
+    void createServer_StorageIsZero_Returns422() throws JsonProcessingException {
+        ServerDto toBeSavedServer = new ServerDto(null, null, null, null, "server1", 3, 200, 0);
+
+        given()
+                .contentType(APPLICATION_JSON)
+                .body(new ObjectMapper().writeValueAsString(toBeSavedServer))
+                .when()
+                .post()
+                .then()
+                .statusCode(422);
+    }
+
+    @Test
+    void createServer_RamIsNull_Returns500() throws JsonProcessingException {
+        ServerDto toBeSavedServer = new ServerDto(null, null, null, null, "server1", 0, null, 30);
+
+        given()
+                .contentType(APPLICATION_JSON)
+                .body(new ObjectMapper().writeValueAsString(toBeSavedServer))
+                .when()
+                .post()
+                .then()
+                .statusCode(500);
+    }
+
+    @Test
+    void updateServer_RamIsNotMultipleOf1024_Returns422() throws JsonProcessingException {
+        UUID uuid = UUID.randomUUID();
+        ServerDto toBeSavedServer = new ServerDto(null, null, null, null, "server1", 2, 200, 30);
+
+        given()
+                .contentType(APPLICATION_JSON)
+                .body(new ObjectMapper().writeValueAsString(toBeSavedServer))
                 .pathParam("serverId", uuid)
                 .when()
-                .put("/api/servers/{serverId}")
+                .put("/{serverId}")
                 .then()
-                .statusCode(404);
-
+                .statusCode(422);
     }
 
     @Test
-    void deleteServer_Success(){
-        Server server = Server.builder()
-                .cores(2)
-                .ram(200)
-                .storage(30)
-                .name("server1").build();
-
-        Server saved = given()
-                .contentType(ContentType.JSON)
-                .body(server)
-                .when()
-                .post("/api/servers")
-                .then()
-                .statusCode(201)
-                .extract().as(Server.class);
-
-        given()
-                .pathParam("serverId", saved.getId())
-                .when()
-                .delete("/api/servers/{serverId}")
-                .then()
-                .statusCode(204);
-    }
-    @Test
-    void deleteServer_Failure(){
+    void updateServer_CoreIsZero_Returns422() throws JsonProcessingException {
         UUID uuid = UUID.randomUUID();
+        ServerDto toBeSavedServer = new ServerDto(null, null, null, null, "server1", 0, 200, 30);
+
         given()
+                .contentType(APPLICATION_JSON)
+                .body(new ObjectMapper().writeValueAsString(toBeSavedServer))
                 .pathParam("serverId", uuid)
                 .when()
-                .delete("/api/servers/{serverId}")
+                .put("/{serverId}")
                 .then()
-                .statusCode(404);
+                .statusCode(422);
     }
+
+    @Test
+    void updateServer_NameIsBlank_Returns422() throws JsonProcessingException {
+        UUID uuid = UUID.randomUUID();
+        ServerDto toBeSavedServer = new ServerDto(null, null, null, null, " ", 0, 200, 30);
+
+        given()
+                .contentType(APPLICATION_JSON)
+                .body(new ObjectMapper().writeValueAsString(toBeSavedServer))
+                .pathParam("serverId", uuid)
+                .when()
+                .put("/{serverId}")
+                .then()
+                .statusCode(422);
+    }
+
+    @Test
+    void updateServer_StorageIsZero_Returns422() throws JsonProcessingException {
+        UUID uuid = UUID.randomUUID();
+        ServerDto toBeSavedServer = new ServerDto(null, null, null, null, "server1", 3, 200, 0);
+
+        given()
+                .contentType(APPLICATION_JSON)
+                .body(new ObjectMapper().writeValueAsString(toBeSavedServer))
+                .pathParam("serverId", uuid)
+                .when()
+                .put("/{serverId}")
+                .then()
+                .statusCode(422);
+    }
+
+    @Test
+    void updateServer_RamIsNull_Returns500() throws JsonProcessingException {
+        UUID uuid = UUID.randomUUID();
+        ServerDto toBeSavedServer = new ServerDto(null, null, null, null, "server1", 0, null, 30);
+
+        given()
+                .contentType(APPLICATION_JSON)
+                .body(new ObjectMapper().writeValueAsString(toBeSavedServer))
+                .pathParam("serverId", uuid)
+                .when()
+                .put("/{serverId}")
+                .then()
+                .statusCode(500);
+    }
+
 }
