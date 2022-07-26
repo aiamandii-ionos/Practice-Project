@@ -50,34 +50,28 @@ public class RequestService {
 
         Request request = null;
         try {
+            UUID userId = UUID.fromString(jwt.getSubject());
+            String properties = new ObjectMapper().writeValueAsString(server);
             switch (requestType) {
                 case CREATE_SERVER -> {
                     logger.info("create request for server create");
-                    UUID userId = UUID.fromString(jwt.getSubject());
-                    String properties = new ObjectMapper().writeValueAsString(server);
-                    request = Request.builder().type(RequestType.CREATE_SERVER)
-                            .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).userId(userId).build();
+                    request = Request.builder().type(RequestType.CREATE_SERVER).message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).userId(userId).build();
                     repository.persist(request);
                 }
                 case UPDATE_SERVER -> {
                     logger.info("create request for server update");
-                    UUID userId = UUID.fromString(jwt.getSubject());
                     Server serverToUpdate = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
                     if (!securityIdentity.hasRole("admin") && !serverToUpdate.getUserId().toString().equals(jwt.getSubject()))
                         throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
-                    String properties = new ObjectMapper().writeValueAsString(server);
-                    request = Request.builder().type(RequestType.UPDATE_SERVER)
-                            .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToUpdate).userId(userId).build();
+                    request = Request.builder().type(RequestType.UPDATE_SERVER).message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToUpdate).userId(userId).build();
                     repository.persist(request);
                 }
                 case DELETE_SERVER -> {
                     logger.info("create request for server delete");
-                    UUID userId = UUID.fromString(jwt.getSubject());
                     Server serverToDelete = serverRepository.findByIdOptional(serverId).orElseThrow(() -> new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId));
                     if (!securityIdentity.hasRole("admin") && !serverToDelete.getUserId().toString().equals(jwt.getSubject()))
                         throw new NotFoundException(ErrorMessage.NOT_FOUND, "server", serverId);
-                    request = Request.builder().type(RequestType.DELETE_SERVER)
-                            .message("").properties("{}").status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToDelete).userId(userId).build();
+                    request = Request.builder().type(RequestType.DELETE_SERVER).message("").properties("{}").status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToDelete).userId(userId).build();
                     repository.persist(request);
                 }
 
@@ -97,8 +91,7 @@ public class RequestService {
         reentrantLock.lock();
         Request lastRequest = repository.getLastRequest();
 
-        if (lastRequest == null)
-            return;
+        if (lastRequest == null) return;
         lastRequest.setStatus(RequestStatus.IN_PROGRESS);
         updateStatusRequest(lastRequest.getRequestId(), lastRequest);
 
@@ -113,33 +106,26 @@ public class RequestService {
             switch (lastRequest.getType()) {
                 case CREATE_SERVER -> {
                     logger.info("create server and update request status");
-                    Server createdServer = serverService.save(server, lastRequest.getUserId());
+                    Server createdServer = serverService.create(server, lastRequest.getUserId());
                     lastRequest.setServer(createdServer);
-                    lastRequest.setStatus(RequestStatus.DONE);
-                    lastRequest.setMessage("Your request has been processed. The server has been successfully created!");
-                    updateStatusRequest(lastRequest.getRequestId(), lastRequest);
                 }
                 case UPDATE_SERVER -> {
                     logger.info("update server and update request status");
                     Server updatedServer = serverService.update(lastRequest.getServer().getId(), server);
                     lastRequest.setServer(updatedServer);
-                    lastRequest.setStatus(RequestStatus.DONE);
-                    lastRequest.setMessage("Your request has been processed. The server has been successfully updated!");
-                    updateStatusRequest(lastRequest.getRequestId(), lastRequest);
                 }
                 case DELETE_SERVER -> {
                     logger.info("delete server and update request status");
-                    String uuid = String.valueOf(lastRequest.getServer().getId());
+                    UUID uuid = lastRequest.getServer().getId();
 
-                    updateRequestServerAfterDelete(UUID.fromString(uuid));
+                    updateRequestServerAfterDelete(uuid);
 
-                    serverService.delete(UUID.fromString(uuid));
-                    lastRequest.setStatus(RequestStatus.DONE);
-                    lastRequest.setMessage("Your request has been processed. The server has been successfully deleted!");
-                    updateStatusRequest(lastRequest.getRequestId(), lastRequest);
+                    serverService.delete(uuid);
                 }
-
             }
+            lastRequest.setStatus(RequestStatus.DONE);
+            lastRequest.setMessage("Your request has been processed. The server has been successfully deleted!");
+            updateStatusRequest(lastRequest.getRequestId(), lastRequest);
         } catch (ApiException e) {
             logger.error(e.getErrorMessage(), e);
             lastRequest.setStatus(RequestStatus.FAILED);
@@ -168,10 +154,8 @@ public class RequestService {
         Request requestToUpdate = repository.findById(uuid);
         requestToUpdate.setStatus(request.getStatus());
         requestToUpdate.setMessage(request.getMessage());
-        if (request.getServer() != null)
-            requestToUpdate.setServer(request.getServer());
-        else
-            requestToUpdate.setServer(null);
+        if (request.getServer() != null) requestToUpdate.setServer(request.getServer());
+        else requestToUpdate.setServer(null);
         repository.persist(requestToUpdate);
     }
 
