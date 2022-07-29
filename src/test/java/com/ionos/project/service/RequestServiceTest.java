@@ -1,5 +1,6 @@
 package com.ionos.project.service;
 
+import com.ionos.project.exception.RequestNotCreatedException;
 import com.ionos.project.model.*;
 import com.ionos.project.model.enums.*;
 import com.ionos.project.repository.*;
@@ -251,30 +252,30 @@ public class RequestServiceTest {
         assertEquals(request.getMessage(), request.getMessage());
     }
 
-    @Test
-    void getAllRequests_Success() {
-        UUID uuid = UUID.randomUUID();
-        Server server = Server.builder()
-                .id(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))
-                .userId(uuid)
-                .cores(2)
-                .ram(1024)
-                .storage(3)
-                .name("s").build();
-
-        String properties = "{\"name\":\"s\",\"cores\":2,\"ram\":1024,\"storage\":3}";
-        Request request = Request.builder().type(RequestType.DELETE_SERVER).requestId(uuid)
-                .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(server).userId(uuid).build();
-
-        Mockito.when(requestRepository.getAll())
-                .thenReturn(List.of(request));
-
-        List<Request> result = requestService.findAll();
-
-        verify(requestRepository, times(1)).getAll();
-        assertThat(result).hasSize(1);
-        assertEquals(result.get(0).getType(), RequestType.DELETE_SERVER);
-    }
+//    @Test
+//    void getAllRequests_Success() {
+//        UUID uuid = UUID.randomUUID();
+//        Server server = Server.builder()
+//                .id(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))
+//                .userId(uuid)
+//                .cores(2)
+//                .ram(1024)
+//                .storage(3)
+//                .name("s").build();
+//
+//        String properties = "{\"name\":\"s\",\"cores\":2,\"ram\":1024,\"storage\":3}";
+//        Request request = Request.builder().type(RequestType.DELETE_SERVER).requestId(uuid)
+//                .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(server).userId(uuid).build();
+//
+//        Mockito.when(requestRepository.getAll())
+//                .thenReturn(List.of(request));
+//
+//        List<Request> result = requestService.findAll();
+//
+//        verify(requestRepository, times(1)).getAll();
+//        assertThat(result).hasSize(1);
+//        assertEquals(result.get(0).getType(), RequestType.DELETE_SERVER);
+//    }
 
     @Test
     void getRequestById_Success() {
@@ -337,5 +338,68 @@ public class RequestServiceTest {
         assertNotNull(exception);
     }
 
+    @Test
+    void createDeleteRequest_ThrowsRequestNotCreatedException() {
+        UUID uuid = UUID.randomUUID();
 
+        String id = "a848a45e-d065-11ec-a62f-2d718d2fcfae";
+
+
+        Server serverToDelete = Server.builder()
+                .id(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))
+                .userId(uuid)
+                .cores(2)
+                .ram(1024)
+                .storage(3)
+                .name("s").build();
+
+        String properties = "{\"name\":\"s\",\"cores\":2,\"ram\":1024,\"storage\":3}";
+        Request request = Request.builder().type(RequestType.DELETE_SERVER).requestId(uuid)
+                .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(null).userId(uuid).build();
+
+        Mockito.when(securityIdentity.hasRole("admin")).thenReturn(true);
+        Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(uuid));
+        Mockito.when(requestRepository.findRequestsByServerId(UUID.fromString(id))).thenReturn(List.of(request));
+        Mockito.when(repository.findByIdOptional(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))).thenReturn(Optional.ofNullable(serverToDelete));
+
+        Exception exception = assertThrows(RequestNotCreatedException.class, () -> {
+            requestService.createRequest(RequestType.DELETE_SERVER, null, UUID.fromString(id));
+        });
+        assertNotNull(exception);
+    }
+
+    @Test
+    void createUpdateRequest_ThrowsRequestNotCreatedException() {
+        UUID uuid = UUID.randomUUID();
+
+        String id = "a848a45e-d065-11ec-a62f-2d718d2fcfae";
+        Server updatedServer = Server.builder()
+                .cores(2)
+                .ram(1024)
+                .storage(3)
+                .name("s").build();
+
+
+        Server serverToUpdate = Server.builder()
+                .id(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))
+                .userId(uuid)
+                .cores(2)
+                .ram(1024)
+                .storage(30)
+                .name("server1").build();
+
+        String properties = "{\"name\":\"s\",\"cores\":2,\"ram\":1024,\"storage\":3}";
+        Request request = Request.builder().type(RequestType.DELETE_SERVER).requestId(uuid)
+                .message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(null).userId(uuid).build();
+
+        Mockito.when(securityIdentity.hasRole("admin")).thenReturn(true);
+        Mockito.when(jwt.getSubject()).thenReturn(String.valueOf(uuid));
+        Mockito.when(requestRepository.findRequestsByServerId(UUID.fromString(id))).thenReturn(List.of(request));
+        Mockito.when(repository.findByIdOptional(UUID.fromString("a848a45e-d065-11ec-a62f-2d718d2fcfae"))).thenReturn(Optional.ofNullable(serverToUpdate));
+
+        Exception exception = assertThrows(RequestNotCreatedException.class, () -> {
+            requestService.createRequest(RequestType.UPDATE_SERVER, updatedServer, UUID.fromString(id));
+        });
+        assertNotNull(exception);
+    }
 }
