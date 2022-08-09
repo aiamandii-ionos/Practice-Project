@@ -1,30 +1,24 @@
 package com.ionos.project.repository;
 
 import com.ionos.project.model.*;
-import com.ionos.project.model.enums.RequestStatus;
-import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import com.ionos.project.model.enums.*;
+import io.quarkus.hibernate.orm.panache.*;
+import io.quarkus.panache.common.Parameters;
 import io.quarkus.security.identity.SecurityIdentity;
-import org.eclipse.microprofile.jwt.JsonWebToken;
-
 import java.util.*;
-import java.util.stream.Collectors;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 @ApplicationScoped
 public class RequestRepository implements PanacheRepositoryBase<Request, UUID> {
     @Inject
-    JsonWebToken jwt;
-
-    @Inject
     SecurityIdentity securityIdentity;
 
-    public List<Request> getAll() {
+    public PanacheQuery<Request> getAll(Parameters params) {
         if (securityIdentity.hasRole("admin"))
-            return find("order by created_at desc").stream().toList();
+            return find("(:type is null or type = :type) and (:status is null or status = :status) and (:dateStart is null or created_at = :dateStart) order by created_at desc", params);
         else {
-            return find("user_id=?1 order by created_at desc", UUID.fromString(jwt.getSubject())).stream().collect(Collectors.toList());
+            return find("user_id=:userId and (:type is null or type = :type) and (:status is null or status = :status) and (cast(:dateStart as date) is null or created_at >= :dateStart) and (cast(:dateEnd as date) is null or created_at < :dateEnd) order by created_at desc", params);
         }
     }
 

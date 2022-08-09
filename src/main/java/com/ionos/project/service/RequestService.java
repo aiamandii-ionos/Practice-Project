@@ -6,12 +6,15 @@ import com.ionos.project.exception.*;
 import com.ionos.project.model.*;
 import com.ionos.project.model.enums.*;
 import com.ionos.project.repository.*;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.panache.common.*;
 import io.quarkus.scheduler.Scheduled;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -41,13 +44,19 @@ public class RequestService {
 
     private final ReentrantLock reentrantLock = new ReentrantLock();
 
-    public List<Request> findAll() {
+    public List<Request> findAll(Integer page, Integer size, String type, String status, String start, String end) {
         logger.info("find all requests");
-        return repository.getAll();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+        LocalDateTime dateStart = LocalDateTime.parse(start, formatter);
+        LocalDateTime dateEnd = LocalDateTime.parse(end, formatter);
+        Parameters params = Parameters.with("userId", UUID.fromString(jwt.getSubject()))
+                .and("type", RequestType.valueOf(type)).and("status", RequestStatus.valueOf(status)).and("dateStart", dateStart).and("dateEnd", dateEnd);
+        PanacheQuery<Request> query = repository.getAll(params);
+        return query.page(Page.of(page, size)).list();
     }
 
     @Transactional
-    public Request createRequest(RequestType requestType, Server server, UUID serverId) throws JsonProcessingException {
+    public Request createRequest(RequestType requestType, Server server, UUID serverId) {
 
         Request request = null;
         try {
@@ -62,19 +71,34 @@ public class RequestService {
                 case UPDATE_SERVER -> {
                     logger.info("create request for server update");
                     Server serverToUpdate = checkIfServerExistsInDatabase(serverId);
+                    List<Request> requestList = repository.findRequestsByServerId(serverId);
+                    for (Request r : requestList) {
+                        if (r.getType() == RequestType.DELETE_SERVER) {
+                            if(r.getStatus() == RequestStatus.TO_DO || r.getStatus() == RequestStatus.IN_PROGRESS)
+                                throw new RequestNotCreatedException(ErrorMessage.OPERATION_NOT_ALLOWED);
+                        }
+                    }
                     request = Request.builder().type(RequestType.UPDATE_SERVER).message("").properties(properties).status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToUpdate).userId(userId).build();
                     repository.persist(request);
                 }
                 case DELETE_SERVER -> {
                     logger.info("create request for server delete");
                     Server serverToDelete = checkIfServerExistsInDatabase(serverId);
+                    List<Request> requestList = repository.findRequestsByServerId(serverId);
+                    for (Request r : requestList) {
+                        if (r.getType() == RequestType.UPDATE_SERVER || r.getType() == RequestType.DELETE_SERVER) {
+                            if(r.getStatus() == RequestStatus.TO_DO || r.getStatus() == RequestStatus.IN_PROGRESS)
+                                throw new RequestNotCreatedException(ErrorMessage.OPERATION_NOT_ALLOWED);
+                        }
+                    }
                     request = Request.builder().type(RequestType.DELETE_SERVER).message("").properties("{}").status(RequestStatus.TO_DO).createdAt(LocalDateTime.now()).server(serverToDelete).userId(userId).build();
                     repository.persist(request);
                 }
 
             }
-        } finally {
-
+        } catch (JsonProcessingException e) {
+            logger.error(e.getMessage(), e);
+            throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
         }
         return request;
     }
@@ -97,11 +121,10 @@ public class RequestService {
         updateStatusRequest(lastRequest.getRequestId(), lastRequest);
 
         reentrantLock.unlock();
-
+        logger.info("getting server from request properties");
+        Server server = null;
+        String request = "";
         try {
-            logger.info("getting server from request properties");
-            Server server = null;
-            String request = "";
             if (!lastRequest.getProperties().isEmpty()) {
                 server = new ObjectMapper().readValue(lastRequest.getProperties(), Server.class);
             }
@@ -131,18 +154,10 @@ public class RequestService {
             lastRequest.setStatus(RequestStatus.DONE);
             lastRequest.setMessage("Your request has been processed. The server has been successfully " + request);
             updateStatusRequest(lastRequest.getRequestId(), lastRequest);
-        } catch (ApiException e) {
-            logger.error(e.getErrorMessage(), e);
-            lastRequest.setStatus(RequestStatus.FAILED);
-            lastRequest.setMessage(e.getErrorMessage());
-            updateStatusRequest(lastRequest.getRequestId(), lastRequest);
-        } catch (Exception e) {
+        } catch (JsonProcessingException e) {
             logger.error(e.getMessage(), e);
-            lastRequest.setStatus(RequestStatus.FAILED);
-            lastRequest.setMessage(ErrorMessage.INTERNAL_SERVER_ERROR.getErrorMessage());
-            updateStatusRequest(lastRequest.getRequestId(), lastRequest);
+            throw new InternalServerError(ErrorMessage.INTERNAL_SERVER_ERROR);
         }
-
     }
 
     public Request findById(UUID uuid) {

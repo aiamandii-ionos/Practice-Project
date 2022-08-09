@@ -26,8 +26,8 @@ public class RequestController {
     JsonWebToken jwt;
 
     @GET
-    public Response getAll() {
-        List<GetAllRequestsDto> requestDtoList = requestService.findAll().stream().map(request -> requestMapper.toGetAllRequestsDto(request)).toList();
+    public Response getAll(@DefaultValue("1") @QueryParam("page") Integer page, @DefaultValue("5") @QueryParam("size") Integer size, @QueryParam("type") String type, @QueryParam("status") String status, @QueryParam("start") String start, @QueryParam("end") String end) {
+        List<GetAllRequestsDto> requestDtoList = requestService.findAll(page, size, type, status, start, end).stream().map(request -> requestMapper.toGetAllRequestsDto(request)).toList();
         return Response.ok(requestDtoList).build();
     }
 
