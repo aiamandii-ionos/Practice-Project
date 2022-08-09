@@ -74,7 +74,7 @@ public class RequestService {
                     List<Request> requestList = repository.findRequestsByServerId(serverId);
                     for (Request r : requestList) {
                         if (r.getType() == RequestType.DELETE_SERVER) {
-                            if(r.getStatus() == RequestStatus.TO_DO || r.getStatus() == RequestStatus.IN_PROGRESS)
+                            if (r.getStatus() == RequestStatus.TO_DO || r.getStatus() == RequestStatus.IN_PROGRESS)
                                 throw new RequestNotCreatedException(ErrorMessage.OPERATION_NOT_ALLOWED);
                         }
                     }
@@ -87,7 +87,7 @@ public class RequestService {
                     List<Request> requestList = repository.findRequestsByServerId(serverId);
                     for (Request r : requestList) {
                         if (r.getType() == RequestType.UPDATE_SERVER || r.getType() == RequestType.DELETE_SERVER) {
-                            if(r.getStatus() == RequestStatus.TO_DO || r.getStatus() == RequestStatus.IN_PROGRESS)
+                            if (r.getStatus() == RequestStatus.TO_DO || r.getStatus() == RequestStatus.IN_PROGRESS)
                                 throw new RequestNotCreatedException(ErrorMessage.OPERATION_NOT_ALLOWED);
                         }
                     }
