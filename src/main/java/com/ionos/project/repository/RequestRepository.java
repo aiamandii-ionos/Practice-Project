@@ -18,9 +18,9 @@ public class RequestRepository implements PanacheRepositoryBase<Request, UUID> {
 
     public PanacheQuery<Request> getAll(Parameters params) {
         if (securityIdentity.hasRole("admin"))
-            return find("(:type is null or type = :type) and (:status is null or status = :status) and (:dateStart is null or created_at = :dateStart) order by created_at desc", params);
+            return find("#Request.getAllAdmin", params);
         else {
-            return find("user_id=:userId and (:type is null or type = :type) and (:status is null or status = :status) and (cast(:dateStart as date) is null or created_at >= :dateStart) and (cast(:dateEnd as date) is null or created_at < :dateEnd) order by created_at desc", params);
+            return find("#Request.getAllUser", params);
         }
     }
 

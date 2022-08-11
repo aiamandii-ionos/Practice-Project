@@ -15,6 +15,10 @@ import javax.persistence.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@NamedQueries({
+        @NamedQuery(name = "Request.getAllAdmin", query = "from Request where (:type is null or type = :type) and (:status is null or status = :status) and (cast(cast(:dateStart as text) as timestamp) is null or created_at >= cast(cast(:dateStart as text) as timestamp)) and (cast(cast(:dateEnd as text) as timestamp) is null or created_at < cast(cast(:dateEnd as text) as timestamp)) order by created_at desc"),
+        @NamedQuery(name = "Request.getAllUser", query = "from Request where user_id=:userId and (:type is null or type = :type) and (:status is null or status = :status) and (cast(cast(:dateStart as text) as timestamp) is null or created_at >= cast(cast(:dateStart as text) as timestamp)) and (cast(cast(:dateEnd as text) as timestamp) is null or created_at < cast(cast(:dateEnd as text) as timestamp)) order by created_at desc")
+})
 public class Request {
     @Id
     @GeneratedValue(generator = "UUID")

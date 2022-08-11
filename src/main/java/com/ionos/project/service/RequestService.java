@@ -13,6 +13,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
+import java.sql.Timestamp;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -47,10 +48,13 @@ public class RequestService {
     public List<Request> findAll(Integer page, Integer size, String type, String status, String start, String end) {
         logger.info("find all requests");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
-        LocalDateTime dateStart = LocalDateTime.parse(start, formatter);
-        LocalDateTime dateEnd = LocalDateTime.parse(end, formatter);
+        LocalDateTime dateStart = null, dateEnd = null;
+        if (start!=null)
+            dateStart = LocalDateTime.parse(start, formatter);
+        if(end!=null)
+            dateEnd = LocalDateTime.parse(end, formatter);
         Parameters params = Parameters.with("userId", UUID.fromString(jwt.getSubject()))
-                .and("type", RequestType.valueOf(type)).and("status", RequestStatus.valueOf(status)).and("dateStart", dateStart).and("dateEnd", dateEnd);
+                .and("type", RequestType.of(type)).and("status", RequestStatus.of(status)).and("dateStart", dateStart).and("dateEnd", dateEnd);
         PanacheQuery<Request> query = repository.getAll(params);
         return query.page(Page.of(page, size)).list();
     }
