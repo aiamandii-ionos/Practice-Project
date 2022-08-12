@@ -16,11 +16,11 @@ public class RequestRepository implements PanacheRepositoryBase<Request, UUID> {
     @Inject
     SecurityIdentity securityIdentity;
 
-    public PanacheQuery<Request> getAll(Parameters params) {
+    public PanacheQuery<Request> getAll(Parameters paramsUser, Parameters paramsAdmin) {
         if (securityIdentity.hasRole("admin"))
-            return find("#Request.getAllAdmin", params);
+            return find("#Request.getAllAdmin", paramsAdmin);
         else {
-            return find("#Request.getAllUser", params);
+            return find("#Request.getAllUser", paramsUser);
         }
     }
 

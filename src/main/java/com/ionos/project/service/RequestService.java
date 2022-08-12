@@ -53,9 +53,10 @@ public class RequestService {
             dateStart = LocalDateTime.parse(start, formatter);
         if(end!=null)
             dateEnd = LocalDateTime.parse(end, formatter);
-        Parameters params = Parameters.with("userId", UUID.fromString(jwt.getSubject()))
+        Parameters paramsUser = Parameters.with("userId", UUID.fromString(jwt.getSubject()))
                 .and("type", RequestType.of(type)).and("status", RequestStatus.of(status)).and("dateStart", dateStart).and("dateEnd", dateEnd);
-        PanacheQuery<Request> query = repository.getAll(params);
+        Parameters paramsAdmin = Parameters.with("type", RequestType.of(type)).and("status", RequestStatus.of(status)).and("dateStart", dateStart).and("dateEnd", dateEnd);
+        PanacheQuery<Request> query = repository.getAll(paramsUser, paramsAdmin);
         return query.page(Page.of(page, size)).list();
     }
 
