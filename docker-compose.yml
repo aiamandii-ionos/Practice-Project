@@ -19,27 +19,32 @@ services:
       - '8181:8080'
     environment:
       KEYCLOAK_PROFILE_FEATURE_UPLOAD_SCRIPTS: enabled
-      DB_VENDOR: h2
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-      KEYCLOAK_FRONTEND_URL: http://localhost:8181/realms/practice-project
+      #KEYCLOAK_FRONTEND_URL: http://keycloakproject:8080/realms/practice-project
+    volumes:
+      - .local/keycloak/:/opt/jboss/keycloak/standalone/data/
 
-#  app:
-#    container_name: app
-#    image: quarkus/practice-project-jvm
-#    ports:
-#      - '8080:8080'
-#    environment:
-#      depends_on: keycloak
-#      usernameIonos: ${USERNAME_IONOS}
-#      passwordIonos: ${PASSWORD_IONOS}
-#      contractNumberIonos: ${CONTRACT_NUMBER_IONOS}
-#      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://db:5432/db
-#      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloakproject:8080/realms/practice-project
-#      QUARKUS_OIDC_TOKEN_ISSUER: any
-##      QUARKUS_OIDC_TOKEN_ISSUER: http://localhost:8181/realms/practice-project
-#      QUARKUS_OIDC_CREDENTIALS_SECRET: e8K6UPWKZdBAi9hHAjrfXXSFjCVgsKOd
-#      QUARKUS_TRANSACTION_MANAGER_DEFAULT_TRANSACTION_TIMEOUT: 500s
-#
-#networks:
-#  auth-network:
+  app:
+    container_name: app
+    image: quarkus/practice-project-jvm
+    ports:
+      - '8080:8080'
+    environment:
+      depends_on: keycloak
+      usernameIonos: ${USERNAME_IONOS}
+      passwordIonos: ${PASSWORD_IONOS}
+      contractNumberIonos: ${CONTRACT_NUMBER_IONOS}
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://db:5432/db
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloakproject:8080/realms/practice-project
+      QUARKUS_OIDC_CREDENTIALS_SECRET: 9ebUawRUqYfU4vH2CzXYQf4ezEPxkIZJ
+      QUARKUS_TRANSACTION_MANAGER_DEFAULT_TRANSACTION_TIMEOUT: 500s
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.57.0/24
+          gateway: 172.16.57.1
