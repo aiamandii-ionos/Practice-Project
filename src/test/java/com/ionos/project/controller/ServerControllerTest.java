@@ -71,7 +71,7 @@ class ServerControllerTest {
     }
 
     @Test
-    void createServer_RamIsNull_Returns500() throws JsonProcessingException {
+    void createServer_RamIsNull_Returns422() throws JsonProcessingException {
         ServerDto toBeSavedServer = new ServerDto(null, null, null, null, "server1", 0, null, 30);
 
         given()
@@ -80,7 +80,7 @@ class ServerControllerTest {
                 .when()
                 .post()
                 .then()
-                .statusCode(500);
+                .statusCode(422);
     }
 
     @Test
@@ -144,7 +144,7 @@ class ServerControllerTest {
     }
 
     @Test
-    void updateServer_RamIsNull_Returns500() throws JsonProcessingException {
+    void updateServer_RamIsNull_Returns422() throws JsonProcessingException {
         UUID uuid = UUID.randomUUID();
         ServerDto toBeSavedServer = new ServerDto(null, null, null, null, "server1", 0, null, 30);
 
@@ -155,7 +155,7 @@ class ServerControllerTest {
                 .when()
                 .put("/{serverId}")
                 .then()
-                .statusCode(500);
+                .statusCode(422);
     }
 
 }
