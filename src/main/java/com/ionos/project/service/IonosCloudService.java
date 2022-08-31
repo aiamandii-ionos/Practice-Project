@@ -203,7 +203,7 @@ public class IonosCloudService {
             ApiResponse<LanPost> response = lanApi.datacentersLansPostWithHttpInfo(dataCenterId, lan, true, 0, contractNumber);
             return response;
         } catch (ApiException e) {
-            logger.error(e.getStackTrace());
+            logger.error(e.getMessage(), e);
             logger.error("Status code " + e.getCode());
             logger.error("Response body " + e.getResponseBody());
             logger.error("Response headers " + e.getResponseHeaders());
