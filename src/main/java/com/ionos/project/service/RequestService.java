@@ -53,8 +53,8 @@ public class RequestService {
             dateStart = LocalDateTime.parse(start, formatter);
         if(end!=null)
             dateEnd = LocalDateTime.parse(end, formatter);
-        UUID userId = securityIdentity.hasRole("user") ? UUID.fromString(jwt.getSubject()) : null;
-        Parameters params = Parameters.with("userId", userId)
+        Parameters params = Parameters.with("userId", UUID.fromString(jwt.getSubject()))
+                .and("role", securityIdentity.hasRole("user")? "user":"admin")
                 .and("type", RequestType.of(type))
                 .and("status", RequestStatus.of(status))
                 .and("dateStart", dateStart)

@@ -16,7 +16,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @NamedQueries({
-        @NamedQuery(name = "Request.getAll", query = "from Request where (user_id is null or user_id=:userId) and (:type is null or type = :type) and (:status is null or status = :status) and (cast(cast(:dateStart as text) as timestamp) is null or created_at >= cast(cast(:dateStart as text) as timestamp)) and (cast(cast(:dateEnd as text) as timestamp) is null or created_at < cast(cast(:dateEnd as text) as timestamp)) order by created_at desc")
+        @NamedQuery(name = "Request.getAll", query = "from Request where ((:role is not null and :role = 'admin') or user_id=:userId) and (:type is null or type = :type) and (:status is null or status = :status) and (cast(cast(:dateStart as text) as timestamp) is null or created_at >= cast(cast(:dateStart as text) as timestamp)) and (cast(cast(:dateEnd as text) as timestamp) is null or created_at < cast(cast(:dateEnd as text) as timestamp)) order by created_at desc")
 })
 public class Request {
     @Id
