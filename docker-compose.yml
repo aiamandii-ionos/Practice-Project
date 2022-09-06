@@ -31,22 +31,12 @@ services:
       - '8080:8080'
       - '5005:5005'
     environment:
-      depends_on: keycloak
       usernameIonos: ${USERNAME_IONOS}
       passwordIonos: ${PASSWORD_IONOS}
       contractNumberIonos: ${CONTRACT_NUMBER_IONOS}
       QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://db:5432/db
       QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloakproject:8080/realms/practice-project
-      QUARKUS_OIDC_CREDENTIALS_SECRET: vAUaBjrZcPB4pA6Zq2W0dW1Oi6ALJbuD
+      QUARKUS_OIDC_CREDENTIALS_SECRET: XjZwFvBtrF73TfvJdilEIf3O4bZNqnXZ
       QUARKUS_TRANSACTION_MANAGER_DEFAULT_TRANSACTION_TIMEOUT: 500s
     extra_hosts:
       - "api.ionos.com: 185.48.116.25"
-
-networks:
-  default:
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.16.57.0/24
-          gateway: 172.16.57.1

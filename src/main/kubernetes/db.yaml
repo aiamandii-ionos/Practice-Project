@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  labels:
+    app: db
+spec:
+  type: NodePort
+  ports:
+    - port: 5432
+  selector:
+    app: db
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: db-kubernetes
+          image: postgres
+          imagePullPolicy: Always
+          env:
+            - name: POSTGRES_DB
+              value: db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: POSTGRES_PASSWORD
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-persistent-storage
+              mountPath: /var/lib/postgres
+      volumes:
+        - name: postgres-persistent-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc

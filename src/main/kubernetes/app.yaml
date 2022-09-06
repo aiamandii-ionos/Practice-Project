@@ -1,0 +1,80 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+        - name: app-kubernetes
+          image: anaiamandii/practice-project
+          env:
+            - name: usernameIonos
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: usernameIonos
+            - name: passwordIonos
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: passwordIonos
+            - name: contractNumberIonos
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: contractNumberIonos
+            - name: QUARKUS_DATASOURCE_JDBC_URL
+              value: jdbc:postgresql://postgres-service:5432/db
+            - name: QUARKUS_OIDC_AUTH_SERVER_URL
+              value: http://keycloak:8080/realms/practice-project
+            - name: QUARKUS_OIDC_CREDENTIALS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: QUARKUS_OIDC_CREDENTIALS_SECRET
+            - name: QUARKUS_TRANSACTION_MANAGER_DEFAULT_TRANSACTION_TIMEOUT
+              value: 500s
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+  labels:
+    app: app
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+  selector:
+    app: app
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - app
+  rules:
+    - host: app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app-service
+                port:
+                  number: 8080
