@@ -17,7 +17,7 @@ public record ServerDto(
         @NotBlank(message = "Name must not be blank")
         String name,
 
-        @NotNull @Min(value = 1, message = "cores number must be positive")
+        @NotNull(message = "cores must not be null") @Min(value = 1, message = "cores number must be positive")
         Integer cores,
 
         @NotNull(message = "ram must not be null") @RamConstraint

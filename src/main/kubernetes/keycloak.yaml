@@ -32,6 +32,14 @@ spec:
                   key: KEYCLOAK_ADMIN_PASSWORD
           ports:
             - containerPort: 8080
+          volumeMounts:
+            - name: keycloak-persistent-storage
+              mountPath: /var/lib/keycloak/data
+              subPath: keycloak_data
+      volumes:
+        - name: keycloak-persistent-storage
+          persistentVolumeClaim:
+            claimName: keycloak-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -46,19 +54,6 @@ spec:
   selector:
     app: keycloak
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: keycloak-pv-claim
-  labels:
-    app: keycloak
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 20Gi
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -67,9 +62,9 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - host
+        - kcloak
   rules:
-    - host: host
+    - host: kcloak
       http:
         paths:
           - path: /
